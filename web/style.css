@@ -152,13 +152,13 @@ body {
   gap: 0.75rem;
 }
 
-input[type="password"], input[type="text"] {
+input[type="password"], input[type="text"], input {
   background: var(--g-bg);
   border: 1px solid var(--g-border);
   color: var(--g-text);
   padding: 0.75rem 1.25rem;
   border-radius: 24px;
-  font-size: 0.95rem;
+  font-size: 16px !important;
   font-family: inherit;
   width: 100%;
   transition: all 0.2s ease;
@@ -829,7 +829,7 @@ input:focus {
   .search-box input {
     padding: 0.5rem;
     width: 100%;
-    font-size: 0.9rem;
+    font-size: 16px !important;
   }
 
   .search-box .g-btn {
