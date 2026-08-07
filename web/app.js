@@ -181,15 +181,44 @@ function createMediaCard(item, isInWatchlist = false) {
 
   const alreadySaved = watchlist.some(i => parseInt(i.tmdb_id) === tmdbId);
 
-  let buttonHTML = '';
+  // Construct Action Button using direct JS event binding to prevent quote parsing errors
+  const actionBtn = document.createElement('button');
+  actionBtn.className = isInWatchlist 
+    ? 'g-btn g-btn-danger g-btn-full' 
+    : (alreadySaved ? 'g-btn g-btn-secondary g-btn-full' : 'g-btn g-btn-full');
+
   if (isInWatchlist) {
-    buttonHTML = `<button class="g-btn g-btn-danger g-btn-full" onclick="event.stopPropagation(); removeItem(${tmdbId})">🗑 Remove</button>`;
+    actionBtn.innerHTML = '🗑 Remove';
+    actionBtn.onclick = async (e) => {
+      e.stopPropagation();
+      actionBtn.disabled = true;
+      actionBtn.innerHTML = '<span>⏳</span> Removing...';
+      await removeItem(tmdbId);
+    };
   } else if (alreadySaved) {
-    buttonHTML = `<button class="g-btn g-btn-secondary g-btn-full" disabled style="opacity:0.6; cursor:default;">✓ Saved</button>`;
+    actionBtn.innerHTML = '✓ Saved';
+    actionBtn.disabled = true;
+    actionBtn.style.opacity = '0.6';
+    actionBtn.style.cursor = 'default';
   } else {
-    const safeTitle = escapeHtml(title).replace(/'/g, "\\'");
-    const safeOverview = escapeHtml(overview).replace(/'/g, "\\'");
-    buttonHTML = `<button class="g-btn g-btn-full" onclick='event.stopPropagation(); addItem(${tmdbId}, "${mediaType}", "${safeTitle}", "${posterPath}", "${rating}", "${year}", "${safeOverview}")'>+ Add to Watchlist</button>`;
+    actionBtn.innerHTML = '+ Add to Watchlist';
+    actionBtn.onclick = async (e) => {
+      e.stopPropagation();
+      actionBtn.disabled = true;
+      actionBtn.innerHTML = '<span>⏳</span> Adding...';
+
+      const newItem = {
+        tmdb_id: tmdbId,
+        type: mediaType,
+        title: title,
+        poster_path: posterPath,
+        vote_average: parseFloat(rating) || null,
+        release_year: year,
+        overview: overview
+      };
+
+      await addItem(newItem);
+    };
   }
 
   card.innerHTML = `
@@ -202,11 +231,11 @@ function createMediaCard(item, isInWatchlist = false) {
       <h3 class="card-title">${escapeHtml(title)}</h3>
       <div class="card-meta">${year ? year : 'Release date N/A'} • ID: ${tmdbId}</div>
       <p class="card-overview">${escapeHtml(overview)}</p>
-      <div class="card-actions">
-        ${buttonHTML}
-      </div>
+      <div class="card-actions"></div>
     </div>
   `;
+
+  card.querySelector('.card-actions').appendChild(actionBtn);
 
   return card;
 }
@@ -456,14 +485,35 @@ function renderDetailsPage(details, id, mediaType) {
 
   const isSaved = watchlist.some(i => parseInt(i.tmdb_id) === parseInt(id));
 
-  const safeTitle = escapeHtml(title).replace(/'/g, "\\'");
-  const safeOverview = escapeHtml(overview).replace(/'/g, "\\'");
-
-  let actionBtn = '';
+  // Construct Details Action Button
+  const detailsActionBtn = document.createElement('button');
   if (isSaved) {
-    actionBtn = `<button class="g-btn g-btn-danger" onclick="removeItem(${id}); openDetailsPage(${id}, '${mediaType}', ${JSON.stringify(details).replace(/"/g, '&quot;')})">🗑 Remove from Watchlist</button>`;
+    detailsActionBtn.className = 'g-btn g-btn-danger';
+    detailsActionBtn.innerHTML = '🗑 Remove from Watchlist';
+    detailsActionBtn.onclick = async () => {
+      detailsActionBtn.disabled = true;
+      detailsActionBtn.innerHTML = '<span>⏳</span> Removing...';
+      await removeItem(id);
+      openDetailsPage(id, mediaType, details);
+    };
   } else {
-    actionBtn = `<button class="g-btn" onclick="addItem(${id}, '${mediaType}', '${safeTitle}', '${posterPath}', '${rating}', '${releaseDate.substring(0, 4)}', '${safeOverview}'); openDetailsPage(${id}, '${mediaType}', ${JSON.stringify(details).replace(/"/g, '&quot;')})">+ Add to Watchlist</button>`;
+    detailsActionBtn.className = 'g-btn';
+    detailsActionBtn.innerHTML = '+ Add to Watchlist';
+    detailsActionBtn.onclick = async () => {
+      detailsActionBtn.disabled = true;
+      detailsActionBtn.innerHTML = '<span>⏳</span> Adding...';
+      const newItem = {
+        tmdb_id: parseInt(id),
+        type: mediaType,
+        title: title,
+        poster_path: posterPath,
+        vote_average: parseFloat(rating) || null,
+        release_year: releaseDate.substring(0, 4),
+        overview: overview
+      };
+      await addItem(newItem);
+      openDetailsPage(id, mediaType, details);
+    };
   }
 
   pageContent.innerHTML = `
@@ -515,32 +565,34 @@ function renderDetailsPage(details, id, mediaType) {
         </div>
 
         <div class="details-action-row">
-          ${actionBtn}
           <a href="https://www.themoviedb.org/${mediaType}/${id}" target="_blank" rel="noopener" class="g-btn g-btn-secondary" style="text-decoration:none;">🔗 View on TMDb</a>
         </div>
       </div>
     </div>
   `;
+
+  pageContent.querySelector('.details-action-row').prepend(detailsActionBtn);
 }
 
 /* ==========================================================================
    Watchlist Operations & Automatic Database Synchronization
    ========================================================================== */
 
-async function addItem(id, type, title, posterPath = '', rating = '', year = '', overview = '') {
-  const numericId = parseInt(id);
+async function addItem(item) {
+  const numericId = parseInt(item.tmdb_id);
   if (watchlist.some(i => parseInt(i.tmdb_id) === numericId)) {
-    return alert('Already in your watchlist!');
+    return;
   }
   watchlist.push({
     tmdb_id: numericId,
-    type: type,
-    title: title,
-    poster_path: posterPath,
-    vote_average: parseFloat(rating) || null,
-    release_year: year,
-    overview: overview
+    type: item.type || 'movie',
+    title: item.title || 'Untitled',
+    poster_path: item.poster_path || '',
+    vote_average: parseFloat(item.vote_average) || null,
+    release_year: item.release_year || '',
+    overview: item.overview || ''
   });
+
   renderWatchlist();
 
   const searchInput = document.getElementById('searchInput').value.trim();
@@ -548,13 +600,13 @@ async function addItem(id, type, title, posterPath = '', rating = '', year = '',
     searchMedia();
   }
 
-  // Auto-sync to database backend
   await saveWatchlistDirectly(true);
 }
 
 async function removeItem(id) {
   const numericId = parseInt(id);
   watchlist = watchlist.filter(i => parseInt(i.tmdb_id) !== numericId);
+
   renderWatchlist();
 
   const searchInput = document.getElementById('searchInput').value.trim();
@@ -562,7 +614,6 @@ async function removeItem(id) {
     searchMedia();
   }
 
-  // Auto-sync to database backend
   await saveWatchlistDirectly(true);
 }
 
