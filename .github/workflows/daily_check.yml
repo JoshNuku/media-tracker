@@ -3,7 +3,13 @@ name: Daily Media Release Checker
 on:
   schedule:
     - cron: '0 8 * * *'  # Runs daily at 08:00 AM UTC
-  workflow_dispatch:      # Allows manual trigger via web UI
+  workflow_dispatch:      # Allows manual trigger via GitHub Web UI
+    inputs:
+      send_test:
+        description: 'Send a test notification to verify ntfy configuration'
+        required: false
+        type: boolean
+        default: true
 
 jobs:
   check-releases:
@@ -28,4 +34,5 @@ jobs:
           TMDB_API_KEY: ${{ secrets.TMDB_API_KEY }}
           NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          SEND_TEST: ${{ inputs.send_test }}
         run: python python/checker.py
