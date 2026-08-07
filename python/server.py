@@ -1,5 +1,7 @@
 import os
 import json
+import urllib.request
+import urllib.parse
 import http.server
 import socketserver
 
@@ -9,7 +11,7 @@ PORT = int(os.getenv("PORT", 8000))
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 WEB_DIR = os.path.join(BASE_DIR, 'web')
 
-# Initialize DB and auto-migrate existing watchlist.json on server startup
+# Initialize DB on server startup
 init_db()
 
 class CustomHandler(http.server.SimpleHTTPRequestHandler):
@@ -27,7 +29,11 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
         self.end_headers()
 
     def do_GET(self):
-        if self.path == '/watchlist.json' or self.path == '/api/watchlist':
+        parsed = urllib.parse.urlparse(self.path)
+        path = parsed.path
+        query_params = urllib.parse.parse_qs(parsed.query)
+
+        if path == '/watchlist.json' or path == '/api/watchlist':
             watchlist = load_watchlist()
             data = json.dumps(watchlist, indent=2, default=lambda o: float(o) if hasattr(o, '__float__') else str(o)).encode('utf-8')
             self.send_response(200)
@@ -35,6 +41,74 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
             self._send_cors_headers()
             self.end_headers()
             self.wfile.write(data)
+
+        elif path == '/api/search':
+            tmdb_key = os.getenv("TMDB_API_KEY")
+            query = query_params.get('query', [''])[0]
+
+            if not tmdb_key:
+                self.send_response(500)
+                self.send_header('Content-Type', 'application/json')
+                self._send_cors_headers()
+                self.end_headers()
+                self.wfile.write(b'{"error": "TMDB_API_KEY environment variable is not set on the server."}')
+                return
+
+            if not query:
+                self.send_response(400)
+                self.send_header('Content-Type', 'application/json')
+                self._send_cors_headers()
+                self.end_headers()
+                self.wfile.write(b'{"error": "Missing search query parameter."}')
+                return
+
+            try:
+                url = f"https://api.themoviedb.org/3/search/multi?api_key={tmdb_key}&query={urllib.parse.quote(query)}"
+                req = urllib.request.Request(url, headers={'User-Agent': 'MediaTracker/1.0'})
+                with urllib.request.urlopen(req) as resp:
+                    resp_data = resp.read()
+                    self.send_response(200)
+                    self.send_header('Content-Type', 'application/json')
+                    self._send_cors_headers()
+                    self.end_headers()
+                    self.wfile.write(resp_data)
+            except Exception as e:
+                self.send_response(500)
+                self.send_header('Content-Type', 'application/json')
+                self._send_cors_headers()
+                self.end_headers()
+                self.wfile.write(json.dumps({"error": str(e)}).encode('utf-8'))
+
+        elif path == '/api/details':
+            tmdb_key = os.getenv("TMDB_API_KEY")
+            media_type = query_params.get('type', ['movie'])[0]
+            media_id = query_params.get('id', [''])[0]
+
+            if not tmdb_key:
+                self.send_response(500)
+                self.send_header('Content-Type', 'application/json')
+                self._send_cors_headers()
+                self.end_headers()
+                self.wfile.write(b'{"error": "TMDB_API_KEY environment variable is not set on the server."}')
+                return
+
+            try:
+                url = f"https://api.themoviedb.org/3/{media_type}/{media_id}?api_key={tmdb_key}&append_to_response=credits,release_dates"
+                req = urllib.request.Request(url, headers={'User-Agent': 'MediaTracker/1.0'})
+                with urllib.request.urlopen(req) as resp:
+                    resp_data = resp.read()
+                    self.send_response(200)
+                    self.send_header('Content-Type', 'application/json')
+                    self._send_cors_headers()
+                    self.end_headers()
+                    self.wfile.write(resp_data)
+            except Exception as e:
+                self.send_response(500)
+                self.send_header('Content-Type', 'application/json')
+                self._send_cors_headers()
+                self.end_headers()
+                self.wfile.write(json.dumps({"error": str(e)}).encode('utf-8'))
+
         else:
             super().do_GET()
 

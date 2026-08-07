@@ -2,7 +2,6 @@ let watchlist = [];
 
 window.onload = async () => {
   initTheme();
-  updateKeyUI();
 
   try {
     const res = await fetch('/watchlist.json');
@@ -61,46 +60,11 @@ function applyTheme(theme) {
 }
 
 /* ==========================================================================
-   API Key & Watchlist Logic
+   Backend Proxy Search & Media Logic
    ========================================================================== */
-function updateKeyUI() {
-  const savedKey = localStorage.getItem('tmdb_key');
-  const statusEl = document.getElementById('keyStatus');
-  const apiKeyInput = document.getElementById('apiKey');
-
-  if (savedKey) {
-    apiKeyInput.value = '';
-    apiKeyInput.placeholder = '•••••••••••••••• (API Key Saved)';
-    if (statusEl) {
-      statusEl.innerText = '✅ TMDb API Key is active in local storage.';
-      statusEl.style.color = 'var(--g-green)';
-    }
-  } else {
-    apiKeyInput.value = '';
-    apiKeyInput.placeholder = 'Paste your TMDb API Key';
-    if (statusEl) {
-      statusEl.innerText = '⚠️ No API Key saved yet.';
-      statusEl.style.color = 'var(--g-red)';
-    }
-  }
-}
-
-function saveKey() {
-  const key = document.getElementById('apiKey').value.trim();
-  if (!key) {
-    return alert('Please paste an API key before clicking Save Key.');
-  }
-  localStorage.setItem('tmdb_key', key);
-  updateKeyUI();
-}
 
 async function searchMedia() {
-  const apiKeyInput = document.getElementById('apiKey').value.trim();
-  const savedKey = localStorage.getItem('tmdb_key');
-  const apiKey = apiKeyInput || savedKey;
   const query = document.getElementById('searchInput').value.trim();
-
-  if (!apiKey) return alert('Please enter and save your TMDb API Key first.');
   if (!query) return alert('Please enter a Search Query.');
 
   const resultsContainer = document.getElementById('searchResults');
@@ -113,9 +77,18 @@ async function searchMedia() {
   `;
 
   try {
-    const res = await fetch(`https://api.themoviedb.org/3/search/multi?api_key=${apiKey}&query=${encodeURIComponent(query)}`);
+    const res = await fetch(`/api/search?query=${encodeURIComponent(query)}`);
     const data = await res.json();
     
+    if (!res.ok || data.error) {
+      resultsContainer.innerHTML = `
+        <div class="empty-state">
+          <p style="color: var(--g-red);">${escapeHtml(data.error || 'Server error searching TMDb.')}</p>
+        </div>
+      `;
+      return;
+    }
+
     resultsContainer.innerHTML = '';
 
     const validItems = (data.results || []).filter(item => item.media_type === 'movie' || item.media_type === 'tv');
@@ -137,7 +110,7 @@ async function searchMedia() {
     console.error(e);
     resultsContainer.innerHTML = `
       <div class="empty-state">
-        <p style="color: var(--g-red);">Error fetching data from TMDb. Please check your API key.</p>
+        <p style="color: var(--g-red);">Error connecting to backend API. Please check server logs.</p>
       </div>
     `;
   }
@@ -181,7 +154,7 @@ function createMediaCard(item, isInWatchlist = false) {
 
   const alreadySaved = watchlist.some(i => parseInt(i.tmdb_id) === tmdbId);
 
-  // Construct Action Button using direct JS event binding to prevent quote parsing errors
+  // Construct Action Button using direct JS event binding
   const actionBtn = document.createElement('button');
   actionBtn.className = isInWatchlist 
     ? 'g-btn g-btn-danger g-btn-full' 
@@ -247,9 +220,6 @@ function createMediaCard(item, isInWatchlist = false) {
 async function openDetailsPage(id, mediaType, localItem = {}) {
   showDetailsView();
   const pageContent = document.getElementById('detailsPageContent');
-  const apiKeyInput = document.getElementById('apiKey').value.trim();
-  const savedKey = localStorage.getItem('tmdb_key');
-  const apiKey = apiKeyInput || savedKey;
 
   pageContent.innerHTML = `
     <div class="loading-box">
@@ -259,15 +229,13 @@ async function openDetailsPage(id, mediaType, localItem = {}) {
   `;
 
   let details = localItem;
-  if (apiKey) {
-    try {
-      const res = await fetch(`https://api.themoviedb.org/3/${mediaType}/${id}?api_key=${apiKey}&append_to_response=credits,release_dates`);
-      if (res.ok) {
-        details = await res.json();
-      }
-    } catch (e) {
-      console.warn("Could not fetch detailed TMDb info", e);
+  try {
+    const res = await fetch(`/api/details?type=${mediaType}&id=${id}`);
+    if (res.ok) {
+      details = await res.json();
     }
+  } catch (e) {
+    console.warn("Could not fetch detailed info from server proxy", e);
   }
 
   renderDetailsPage(details, id, mediaType);
