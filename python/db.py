@@ -10,7 +10,10 @@ WATCHLIST_FILE = os.path.join(BASE_DIR, "watchlist.json")
 def get_connection():
     if DATABASE_URL:
         import psycopg2
-        return psycopg2.connect(DATABASE_URL)
+        url = DATABASE_URL
+        if url.startswith("postgres://"):
+            url = url.replace("postgres://", "postgresql://", 1)
+        return psycopg2.connect(url)
     else:
         conn = sqlite3.connect(DB_PATH)
         conn.row_factory = sqlite3.Row
@@ -101,22 +104,24 @@ def load_watchlist():
         watchlist = []
         for row in rows:
             if isinstance(row, dict) or hasattr(row, 'keys'):
+                vote_avg = float(row["vote_average"]) if row["vote_average"] is not None else None
                 watchlist.append({
                     "tmdb_id": row["tmdb_id"],
                     "type": row["type"],
                     "title": row["title"],
                     "poster_path": row["poster_path"],
-                    "vote_average": row["vote_average"],
+                    "vote_average": vote_avg,
                     "release_year": row["release_year"],
                     "overview": row["overview"]
                 })
             else:
+                vote_avg = float(row[4]) if row[4] is not None else None
                 watchlist.append({
                     "tmdb_id": row[0],
                     "type": row[1],
                     "title": row[2],
                     "poster_path": row[3],
-                    "vote_average": row[4],
+                    "vote_average": vote_avg,
                     "release_year": row[5],
                     "overview": row[6]
                 })

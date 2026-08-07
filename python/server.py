@@ -29,7 +29,7 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
     def do_GET(self):
         if self.path == '/watchlist.json' or self.path == '/api/watchlist':
             watchlist = load_watchlist()
-            data = json.dumps(watchlist, indent=2).encode('utf-8')
+            data = json.dumps(watchlist, indent=2, default=lambda o: float(o) if hasattr(o, '__float__') else str(o)).encode('utf-8')
             self.send_response(200)
             self.send_header('Content-Type', 'application/json')
             self._send_cors_headers()
