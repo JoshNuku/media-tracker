@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Media Tracker Manager</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Shared Application Header -->
+  <header class="app-header">
+    <div class="header-brand" onclick="showDashboardView()" style="cursor: pointer;">
+      <svg class="header-logo-icon" width="32" height="32" viewBox="0 0 24 24" fill="var(--g-blue)">
+        <path d="M18 4l2 4h-3l-2-4h-2l2 4h-3l-2-4H9l2 4H8L6 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4h-4z"/>
+      </svg>
+      <h1 class="app-title">Media Tracker <span>Manager</span></h1>
+    </div>
+
+    <button id="themeToggleBtn" class="theme-toggle-btn" onclick="toggleTheme()" aria-label="Toggle Theme">
+      <span id="themeToggleIcon">☀️</span> <span id="themeToggleText">Light</span>
+    </button>
+  </header>
+
+  <!-- Main Dashboard View Page -->
+  <div id="dashboardView" class="page-view">
+    <div class="config-box">
+      <label for="apiKey">TMDb API Key Setup</label>
+      <div class="input-group">
+        <input type="password" id="apiKey" placeholder="Paste your TMDb API Key">
+        <button class="g-btn" onclick="saveKey()">Save Key</button>
+      </div>
+      <div id="keyStatus" style="font-size: 0.85rem; margin-top: 0.5rem;"></div>
+    </div>
+
+    <div class="search-container">
+      <div class="search-box">
+        <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24">
+          <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+        </svg>
+        <input type="text" id="searchInput" placeholder="Search movies or TV shows..." onkeypress="if(event.key==='Enter') searchMedia()">
+        <button class="g-btn" onclick="searchMedia()">Search</button>
+      </div>
+    </div>
+
+    <main class="dashboard-stack">
+      <!-- Search Results Section -->
+      <section class="dashboard-section">
+        <div class="section-header">
+          <h2 class="section-title">Search Results</h2>
+        </div>
+        <div id="searchResults" class="media-grid">
+          <div class="empty-state">
+            <svg width="48" height="48" viewBox="0 0 24 24"><path fill="currentColor" d="M18 4l2 4h-3l-2-4h-2l2 4h-3l-2-4H9l2 4H8L6 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4h-4z"/></svg>
+            <p>Type a title above and press Search to discover movies & TV shows.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Current Watchlist Section -->
+      <section class="dashboard-section">
+        <div class="section-header">
+          <h2 class="section-title">
+            Current Watchlist
+            <span id="count" class="count-badge">0</span>
+          </h2>
+          <button id="saveBtn" class="g-btn g-btn-secondary" onclick="saveWatchlistDirectly()">
+            <span>💾</span> Save Watchlist
+          </button>
+        </div>
+        
+        <div id="watchlist" class="media-grid"></div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Dedicated Media Details Full Page View -->
+  <div id="detailsPage" class="page-view" style="display: none;">
+    <div class="details-nav-bar">
+      <button class="g-btn g-btn-secondary" onclick="showDashboardView()">
+        <span>←</span> Back to Dashboard
+      </button>
+    </div>
+    <div id="detailsPageContent" class="details-page-card"></div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
