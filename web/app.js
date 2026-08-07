@@ -149,9 +149,9 @@ function createMediaCard(item, isInWatchlist = false) {
   const mediaType = item.media_type || item.type || 'movie';
   const posterPath = item.poster_path || '';
   const posterUrl = posterPath ? `https://image.tmdb.org/t/p/w500${posterPath}` : '';
-  const rating = item.vote_average ? item.vote_average.toFixed(1) : '';
+  const rating = item.vote_average ? parseFloat(item.vote_average).toFixed(1) : '';
   const overview = item.overview || 'No overview available.';
-  const tmdbId = item.id || item.tmdb_id;
+  const tmdbId = parseInt(item.id || item.tmdb_id);
 
   const card = document.createElement('div');
   card.className = 'media-card';
@@ -179,7 +179,7 @@ function createMediaCard(item, isInWatchlist = false) {
     ? `<div class="rating-badge">★ ${rating}</div>`
     : '';
 
-  const alreadySaved = watchlist.some(i => i.tmdb_id === tmdbId);
+  const alreadySaved = watchlist.some(i => parseInt(i.tmdb_id) === tmdbId);
 
   let buttonHTML = '';
   if (isInWatchlist) {
@@ -253,7 +253,7 @@ function renderDetailsPage(details, id, mediaType) {
   const posterUrl = posterPath ? `https://image.tmdb.org/t/p/w500${posterPath}` : '';
   const backdropPath = details.backdrop_path || '';
   const backdropUrl = backdropPath ? `https://image.tmdb.org/t/p/w1280${backdropPath}` : posterUrl;
-  const rating = details.vote_average ? details.vote_average.toFixed(1) : '';
+  const rating = details.vote_average ? parseFloat(details.vote_average).toFixed(1) : '';
   const voteCount = details.vote_count ? details.vote_count.toLocaleString() : '';
   const releaseDate = details.release_date || details.first_air_date || details.release_year || 'Unknown';
   const genres = details.genres ? details.genres.map(g => g.name) : [];
@@ -454,7 +454,7 @@ function renderDetailsPage(details, id, mediaType) {
     `;
   }
 
-  const isSaved = watchlist.some(i => i.tmdb_id === id);
+  const isSaved = watchlist.some(i => parseInt(i.tmdb_id) === parseInt(id));
 
   const safeTitle = escapeHtml(title).replace(/'/g, "\\'");
   const safeOverview = escapeHtml(overview).replace(/'/g, "\\'");
@@ -524,15 +524,16 @@ function renderDetailsPage(details, id, mediaType) {
 }
 
 /* ==========================================================================
-   Watchlist Operations
+   Watchlist Operations & Automatic Database Synchronization
    ========================================================================== */
 
-function addItem(id, type, title, posterPath = '', rating = '', year = '', overview = '') {
-  if (watchlist.some(i => i.tmdb_id === id)) {
+async function addItem(id, type, title, posterPath = '', rating = '', year = '', overview = '') {
+  const numericId = parseInt(id);
+  if (watchlist.some(i => parseInt(i.tmdb_id) === numericId)) {
     return alert('Already in your watchlist!');
   }
   watchlist.push({
-    tmdb_id: id,
+    tmdb_id: numericId,
     type: type,
     title: title,
     poster_path: posterPath,
@@ -546,16 +547,23 @@ function addItem(id, type, title, posterPath = '', rating = '', year = '', overv
   if (searchInput) {
     searchMedia();
   }
+
+  // Auto-sync to database backend
+  await saveWatchlistDirectly(true);
 }
 
-function removeItem(id) {
-  watchlist = watchlist.filter(i => i.tmdb_id !== id);
+async function removeItem(id) {
+  const numericId = parseInt(id);
+  watchlist = watchlist.filter(i => parseInt(i.tmdb_id) !== numericId);
   renderWatchlist();
 
   const searchInput = document.getElementById('searchInput').value.trim();
   if (searchInput) {
     searchMedia();
   }
+
+  // Auto-sync to database backend
+  await saveWatchlistDirectly(true);
 }
 
 function renderWatchlist() {
@@ -579,9 +587,9 @@ function renderWatchlist() {
   });
 }
 
-async function saveWatchlistDirectly() {
+async function saveWatchlistDirectly(silent = false) {
   const saveBtn = document.getElementById('saveBtn');
-  if (saveBtn) {
+  if (saveBtn && !silent) {
     saveBtn.disabled = true;
     saveBtn.innerHTML = `<span>⏳</span> Saving...`;
   }
@@ -594,14 +602,21 @@ async function saveWatchlistDirectly() {
     });
 
     if (res.ok) {
-      alert('✅ watchlist.json updated directly in your project folder!');
+      if (!silent) {
+        alert('✅ Watchlist saved to Database!');
+      }
     } else {
-      alert('❌ Failed to save watchlist.');
+      const errData = await res.json().catch(() => ({}));
+      if (!silent) {
+        alert('❌ Failed to save watchlist: ' + (errData.error || res.statusText));
+      }
     }
   } catch (e) {
-    alert('❌ Error saving watchlist.');
+    if (!silent) {
+      alert('❌ Error saving watchlist: ' + e.message);
+    }
   } finally {
-    if (saveBtn) {
+    if (saveBtn && !silent) {
       saveBtn.disabled = false;
       saveBtn.innerHTML = `<span>💾</span> Save Watchlist`;
     }

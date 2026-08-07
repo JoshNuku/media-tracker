@@ -4,13 +4,16 @@ import sqlite3
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DB_PATH = os.path.join(BASE_DIR, "media_tracker.db")
-DATABASE_URL = os.getenv("DATABASE_URL")
 WATCHLIST_FILE = os.path.join(BASE_DIR, "watchlist.json")
 
+def get_db_url():
+    return os.getenv("DATABASE_URL")
+
 def get_connection():
-    if DATABASE_URL:
+    db_url = get_db_url()
+    if db_url:
         import psycopg2
-        url = DATABASE_URL
+        url = db_url.strip()
         if url.startswith("postgres://"):
             url = url.replace("postgres://", "postgresql://", 1)
         return psycopg2.connect(url)
@@ -19,12 +22,22 @@ def get_connection():
         conn.row_factory = sqlite3.Row
         return conn
 
+def clean_float(val):
+    if val is None or val == "" or val == "N/A" or val == "null":
+        return None
+    try:
+        f = float(val)
+        return f if f == f else None  # Filter out NaN
+    except (ValueError, TypeError):
+        return None
+
 def init_db():
+    db_url = get_db_url()
     try:
         conn = get_connection()
         cursor = conn.cursor()
         
-        if DATABASE_URL:
+        if db_url:
             cursor.execute("""
                 CREATE TABLE IF NOT EXISTS watchlist (
                     tmdb_id INT PRIMARY KEY,
@@ -61,39 +74,40 @@ def init_db():
                 with open(WATCHLIST_FILE, "r", encoding="utf-8") as f:
                     items = json.load(f)
                     for item in items:
-                        if DATABASE_URL:
+                        v_avg = clean_float(item.get("vote_average"))
+                        if db_url:
                             cursor.execute("""
                                 INSERT INTO watchlist (tmdb_id, type, title, poster_path, vote_average, release_year, overview)
                                 VALUES (%s, %s, %s, %s, %s, %s, %s)
                                 ON CONFLICT (tmdb_id) DO NOTHING;
                             """, (
-                                item.get("tmdb_id"),
-                                item.get("type", "movie"),
-                                item.get("title", ""),
-                                item.get("poster_path", ""),
-                                item.get("vote_average"),
-                                item.get("release_year", ""),
-                                item.get("overview", "")
+                                int(item.get("tmdb_id")),
+                                str(item.get("type", "movie")),
+                                str(item.get("title", "")),
+                                str(item.get("poster_path") or ""),
+                                v_avg,
+                                str(item.get("release_year") or ""),
+                                str(item.get("overview") or "")
                             ))
                         else:
                             cursor.execute("""
                                 INSERT OR IGNORE INTO watchlist (tmdb_id, type, title, poster_path, vote_average, release_year, overview)
                                 VALUES (?, ?, ?, ?, ?, ?, ?);
                             """, (
-                                item.get("tmdb_id"),
-                                item.get("type", "movie"),
-                                item.get("title", ""),
-                                item.get("poster_path", ""),
-                                item.get("vote_average"),
-                                item.get("release_year", ""),
-                                item.get("overview", "")
+                                int(item.get("tmdb_id")),
+                                str(item.get("type", "movie")),
+                                str(item.get("title", "")),
+                                str(item.get("poster_path") or ""),
+                                v_avg,
+                                str(item.get("release_year") or ""),
+                                str(item.get("overview") or "")
                             ))
                     conn.commit()
                 print("[SUCCESS] Migrated watchlist.json into Database!")
 
         conn.close()
     except Exception as e:
-        print("Database init note:", e)
+        print("[DB ERROR] init_db failed:", e)
 
 def load_watchlist():
     try:
@@ -104,75 +118,79 @@ def load_watchlist():
         watchlist = []
         for row in rows:
             if isinstance(row, dict) or hasattr(row, 'keys'):
-                vote_avg = float(row["vote_average"]) if row["vote_average"] is not None else None
+                v_avg = clean_float(row["vote_average"])
                 watchlist.append({
                     "tmdb_id": row["tmdb_id"],
                     "type": row["type"],
                     "title": row["title"],
                     "poster_path": row["poster_path"],
-                    "vote_average": vote_avg,
+                    "vote_average": v_avg,
                     "release_year": row["release_year"],
                     "overview": row["overview"]
                 })
             else:
-                vote_avg = float(row[4]) if row[4] is not None else None
+                v_avg = clean_float(row[4])
                 watchlist.append({
                     "tmdb_id": row[0],
                     "type": row[1],
                     "title": row[2],
                     "poster_path": row[3],
-                    "vote_average": vote_avg,
+                    "vote_average": v_avg,
                     "release_year": row[5],
                     "overview": row[6]
                 })
         conn.close()
         return watchlist
     except Exception as e:
-        print("Database load fallback to file:", e)
+        print("[DB ERROR] load_watchlist failed:", e)
         if os.path.exists(WATCHLIST_FILE):
             with open(WATCHLIST_FILE, "r", encoding="utf-8") as f:
                 return json.load(f)
         return []
 
 def save_watchlist(watchlist_data):
+    db_url = get_db_url()
     try:
         conn = get_connection()
         cursor = conn.cursor()
         cursor.execute("DELETE FROM watchlist;")
         for item in watchlist_data:
-            if DATABASE_URL:
+            v_avg = clean_float(item.get("vote_average"))
+            if db_url:
                 cursor.execute("""
                     INSERT INTO watchlist (tmdb_id, type, title, poster_path, vote_average, release_year, overview)
                     VALUES (%s, %s, %s, %s, %s, %s, %s)
                     ON CONFLICT (tmdb_id) DO NOTHING;
                 """, (
-                    item.get("tmdb_id"),
-                    item.get("type", "movie"),
-                    item.get("title", ""),
-                    item.get("poster_path", ""),
-                    item.get("vote_average"),
-                    item.get("release_year", ""),
-                    item.get("overview", "")
+                    int(item.get("tmdb_id")),
+                    str(item.get("type", "movie")),
+                    str(item.get("title", "")),
+                    str(item.get("poster_path") or ""),
+                    v_avg,
+                    str(item.get("release_year") or ""),
+                    str(item.get("overview") or "")
                 ))
             else:
                 cursor.execute("""
                     INSERT OR IGNORE INTO watchlist (tmdb_id, type, title, poster_path, vote_average, release_year, overview)
                     VALUES (?, ?, ?, ?, ?, ?, ?);
                 """, (
-                    item.get("tmdb_id"),
-                    item.get("type", "movie"),
-                    item.get("title", ""),
-                    item.get("poster_path", ""),
-                    item.get("vote_average"),
-                    item.get("release_year", ""),
-                    item.get("overview", "")
+                    int(item.get("tmdb_id")),
+                    str(item.get("type", "movie")),
+                    str(item.get("title", "")),
+                    str(item.get("poster_path") or ""),
+                    v_avg,
+                    str(item.get("release_year") or ""),
+                    str(item.get("overview") or "")
                 ))
         conn.commit()
         conn.close()
+        print(f"[SUCCESS] Saved {len(watchlist_data)} item(s) to Database!")
     except Exception as e:
-        print("Database save note:", e)
+        print("[DB ERROR] save_watchlist failed:", e)
+        raise e
 
-    # Sync watchlist.json file as backup
+    # Sync watchlist.json file as local backup
     try:
         with open(WATCHLIST_FILE, "w", encoding="utf-8") as f:
             json.dump(watchlist_data, f, indent=2)
