@@ -7,7 +7,24 @@ DB_PATH = os.path.join(BASE_DIR, "media_tracker.db")
 WATCHLIST_FILE = os.path.join(BASE_DIR, "watchlist.json")
 
 def get_db_url():
-    return os.getenv("DATABASE_URL")
+    url = os.getenv("DATABASE_URL")
+    if url and url.strip():
+        return url.strip()
+    return None
+
+def get_masked_db_url():
+    url = get_db_url()
+    if not url:
+        return f"SQLite ({DB_PATH})"
+    try:
+        # Mask user:password in postgres://user:pass@host/db
+        parts = url.split('@')
+        if len(parts) == 2:
+            prefix = parts[0].split('//')[0] + "//***:***"
+            return f"{prefix}@{parts[1]}"
+    except Exception:
+        pass
+    return "PostgreSQL (Configured)"
 
 def get_connection():
     db_url = get_db_url()
@@ -16,7 +33,21 @@ def get_connection():
         url = db_url.strip()
         if url.startswith("postgres://"):
             url = url.replace("postgres://", "postgresql://", 1)
-        return psycopg2.connect(url)
+        
+        # Connect to PostgreSQL (try direct, fallback to sslmode='require')
+        try:
+            if "sslmode=" not in url and ("render.com" in url or "dpg-" in url or "amazonaws.com" in url or "supabase" in url):
+                conn = psycopg2.connect(url, sslmode='require', connect_timeout=10)
+            else:
+                conn = psycopg2.connect(url, connect_timeout=10)
+            return conn
+        except Exception as e:
+            try:
+                conn = psycopg2.connect(url, sslmode='require', connect_timeout=10)
+                return conn
+            except Exception as e2:
+                print(f"[VESPER DB FATAL] Failed to connect to PostgreSQL: {e2}")
+                raise e2
     else:
         conn = sqlite3.connect(DB_PATH)
         conn.row_factory = sqlite3.Row
@@ -30,6 +61,34 @@ def clean_float(val):
         return f if f == f else None  # Filter out NaN
     except (ValueError, TypeError):
         return None
+
+def get_db_status():
+    db_url = get_db_url()
+    status = {
+        "engine": "postgresql" if db_url else "sqlite",
+        "database_url_configured": bool(db_url),
+        "target": get_masked_db_url(),
+        "connected": False,
+        "users_count": 0,
+        "watchlist_count": 0,
+        "error": None
+    }
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT COUNT(*) FROM users;")
+        u_row = cursor.fetchone()
+        status["users_count"] = u_row[0] if u_row else 0
+        
+        cursor.execute("SELECT COUNT(*) FROM watchlist;")
+        w_row = cursor.fetchone()
+        status["watchlist_count"] = w_row[0] if w_row else 0
+        
+        status["connected"] = True
+        conn.close()
+    except Exception as e:
+        status["error"] = str(e)
+    return status
 
 def init_db():
     db_url = get_db_url()
@@ -99,22 +158,25 @@ def init_db():
                 );
             """)
 
-        # Column migrations for existing watchlist tables
+        # Safe Column migrations for existing watchlist tables without aborting transactions
         try:
             if db_url:
-                cursor.execute("ALTER TABLE watchlist ADD COLUMN user_id VARCHAR(128) DEFAULT 'default_user';")
+                cursor.execute("SELECT column_name FROM information_schema.columns WHERE table_name = 'watchlist' AND column_name = 'user_id';")
+                if not cursor.fetchone():
+                    cursor.execute("ALTER TABLE watchlist ADD COLUMN user_id VARCHAR(128) DEFAULT 'default_user';")
+                
+                cursor.execute("SELECT column_name FROM information_schema.columns WHERE table_name = 'watchlist' AND column_name = 'status';")
+                if not cursor.fetchone():
+                    cursor.execute("ALTER TABLE watchlist ADD COLUMN status VARCHAR(20) DEFAULT 'plan_to_watch';")
             else:
-                cursor.execute("ALTER TABLE watchlist ADD COLUMN user_id TEXT DEFAULT 'default_user';")
-        except Exception:
-            pass # Column already exists
-
-        try:
-            if db_url:
-                cursor.execute("ALTER TABLE watchlist ADD COLUMN status VARCHAR(20) DEFAULT 'plan_to_watch';")
-            else:
-                cursor.execute("ALTER TABLE watchlist ADD COLUMN status TEXT DEFAULT 'plan_to_watch';")
-        except Exception:
-            pass # Column already exists
+                cursor.execute("PRAGMA table_info(watchlist);")
+                cols = [row[1] for row in cursor.fetchall()]
+                if 'user_id' not in cols:
+                    cursor.execute("ALTER TABLE watchlist ADD COLUMN user_id TEXT DEFAULT 'default_user';")
+                if 'status' not in cols:
+                    cursor.execute("ALTER TABLE watchlist ADD COLUMN status TEXT DEFAULT 'plan_to_watch';")
+        except Exception as e:
+            print("[DB NOTICE] Watchlist column migration check:", e)
 
         # 3. Connections table
         if db_url:

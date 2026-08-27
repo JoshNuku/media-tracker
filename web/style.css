@@ -3168,6 +3168,7 @@ input:focus {
     background: rgba(0, 0, 0, 0.75) !important;
     backdrop-filter: blur(8px) !important;
     -webkit-backdrop-filter: blur(8px) !important;
+    z-index: 2000 !important;
   }
 
   .modal-card,
@@ -3183,12 +3184,14 @@ input:focus {
     border-top: 1px solid var(--g-border) !important;
     border-bottom: none !important;
     margin: 0 !important;
-    max-height: 86vh !important;
-    padding: 0.85rem 1.25rem calc(1.25rem + env(safe-area-inset-bottom, 0px)) 1.25rem !important;
+    max-height: 84dvh !important;
+    max-height: 84vh !important;
+    padding: 0.75rem 1.15rem calc(0.85rem + env(safe-area-inset-bottom, 0px)) 1.15rem !important;
     box-shadow: 0 -12px 40px rgba(0, 0, 0, 0.6) !important;
     animation: sheetSlideUp 0.28s cubic-bezier(0.16, 1, 0.3, 1) !important;
     display: flex !important;
     flex-direction: column !important;
+    overflow: hidden !important;
     box-sizing: border-box !important;
   }
 
@@ -3207,9 +3210,9 @@ input:focus {
     display: block !important;
     width: 44px;
     height: 5px;
-    background: rgba(255, 255, 255, 0.22);
+    background: rgba(255, 255, 255, 0.25);
     border-radius: 3px;
-    margin: 0.15rem auto 0.85rem auto;
+    margin: 0.1rem auto 0.75rem auto;
     cursor: grab;
     flex-shrink: 0;
   }
@@ -3219,23 +3222,29 @@ input:focus {
   }
 
   .modal-header {
-    margin-bottom: 0.85rem !important;
-    flex-shrink: 0;
+    margin-bottom: 0.75rem !important;
+    flex-shrink: 0 !important;
   }
 
   .modal-body,
   .about-modal-body {
-    flex: 1 1 auto;
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
     overflow-y: auto !important;
     -webkit-overflow-scrolling: touch !important;
+    overscroll-behavior: contain !important;
     padding-right: 0.25rem;
+    padding-bottom: 1rem;
+    touch-action: pan-y !important;
   }
 
   .modal-footer {
-    margin-top: 1rem !important;
+    margin-top: auto !important;
     padding-top: 0.75rem !important;
-    border-top: 1px solid var(--g-border);
-    flex-shrink: 0;
+    border-top: 1px solid var(--g-border) !important;
+    flex-shrink: 0 !important;
+    background: var(--g-surface) !important;
+    z-index: 10 !important;
   }
 
   .about-cadence-grid {

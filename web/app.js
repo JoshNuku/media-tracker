@@ -2374,27 +2374,28 @@ window.addEventListener('keydown', (e) => {
   }
 });
 
-/* Touch Drag Gesture to Dismiss Mobile Modal Bottom Sheets */
+/* Touch Drag Gesture to Dismiss Mobile Modal Bottom Sheets (Header & Handle Only) */
 function initBottomSheetTouchGestures() {
   document.querySelectorAll('.modal-card').forEach(card => {
+    const handle = card.querySelector('.modal-sheet-handle');
+    const header = card.querySelector('.modal-header');
+
     let startY = 0;
     let currentY = 0;
     let isDragging = false;
 
-    card.addEventListener('touchstart', (e) => {
-      // Only drag if on mobile screen size
+    const onTouchStart = (e) => {
       if (window.innerWidth > 768) return;
-      const body = card.querySelector('.modal-body, .about-modal-body');
-      if (body && body.scrollTop > 0 && !e.target.closest('.modal-sheet-handle, .modal-header')) {
-        return;
-      }
       startY = e.touches[0].clientY;
       currentY = startY;
       isDragging = true;
       card.style.transition = 'none';
-    }, { passive: true });
+    };
 
-    card.addEventListener('touchmove', (e) => {
+    if (handle) handle.addEventListener('touchstart', onTouchStart, { passive: true });
+    if (header) header.addEventListener('touchstart', onTouchStart, { passive: true });
+
+    window.addEventListener('touchmove', (e) => {
       if (!isDragging || window.innerWidth > 768) return;
       currentY = e.touches[0].clientY;
       const diffY = currentY - startY;
@@ -2403,12 +2404,12 @@ function initBottomSheetTouchGestures() {
       }
     }, { passive: true });
 
-    card.addEventListener('touchend', () => {
+    window.addEventListener('touchend', () => {
       if (!isDragging || window.innerWidth > 768) return;
       isDragging = false;
       const diffY = currentY - startY;
       card.style.transition = 'transform 0.25s cubic-bezier(0.16, 1, 0.3, 1)';
-      if (diffY > 100) {
+      if (diffY > 90) {
         const modalOverlay = card.closest('.modal-overlay');
         if (modalOverlay) {
           card.style.transform = 'translateY(100%)';

@@ -8,7 +8,7 @@ import threading
 import time
 
 from db import (
-    init_db, load_watchlist, save_watchlist, add_to_watchlist, remove_from_watchlist,
+    init_db, get_db_status, load_watchlist, save_watchlist, add_to_watchlist, remove_from_watchlist,
     get_user, upsert_user, update_user_settings, get_public_users,
     get_user_connections, manage_connection, add_rating, get_ratings, delete_rating,
     add_comment, get_comments, get_comment, delete_comment, get_user_activity,
@@ -266,6 +266,10 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
                     self._send_json_response(200, resp_data)
             except Exception as e:
                 self._send_json_response(500, {"error": str(e)})
+
+        elif path == '/api/db-status':
+            status = get_db_status()
+            self._send_json_response(200 if status.get('connected') else 503, status)
 
         else:
             super().do_GET()
