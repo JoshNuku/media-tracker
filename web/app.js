@@ -29,15 +29,19 @@ try {
 
 window.onload = async () => {
   initTheme();
+  initBottomSheetTouchGestures();
   if (currentUser) {
     updateAuthUI(true);
     const landing = document.getElementById('landingPage');
     const mainApp = document.getElementById('mainAppView');
     if (landing) landing.style.display = 'none';
     if (mainApp) mainApp.style.display = 'block';
+    await loadWatchlist();
+  } else {
+    updateAuthUI(false);
+    showLandingPage();
   }
   initFirebase();
-  await loadWatchlist();
 };
 
 /* ==========================================================================
@@ -94,8 +98,8 @@ function initFirebase() {
         if (!localStorage.getItem('vesper_current_user')) {
           currentUser = null;
           updateAuthUI(false);
+          showLandingPage();
         }
-        await loadWatchlist();
       }
     });
   } catch (e) {
@@ -111,10 +115,11 @@ function updateAuthUI(isLoggedIn) {
 
   // Landing page elements
   const landingHeroLoginBtn = document.getElementById('landingHeroLoginBtn');
+  const heroCtaBtn = document.getElementById('heroCtaBtn');
 
   if (isLoggedIn && currentUser) {
     if (loginBtn) loginBtn.style.display = 'none';
-    if (badge) badge.style.display = 'flex';
+    if (badge) badge.style.display = 'inline-flex';
     const avatarUrl = currentUser.photo_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(currentUser.uid || 'user')}`;
     if (avatar) {
       avatar.src = avatarUrl;
@@ -125,12 +130,26 @@ function updateAuthUI(isLoggedIn) {
     const firstName = currentUser.display_name ? currentUser.display_name.trim().split(' ')[0] : 'User';
     if (userName) userName.innerText = firstName;
 
+    // Update modal profile card elements
+    const modalAvatar = document.getElementById('modalProfileAvatar');
+    const modalName = document.getElementById('modalProfileName');
+    const modalEmail = document.getElementById('modalProfileEmail');
+    if (modalAvatar) modalAvatar.src = avatarUrl;
+    if (modalName) modalName.innerText = currentUser.display_name || 'VESPER Member';
+    if (modalEmail) modalEmail.innerText = currentUser.email || '';
+
     if (landingHeroLoginBtn) landingHeroLoginBtn.style.display = 'none';
+    if (heroCtaBtn) {
+      heroCtaBtn.innerHTML = `Launch Dashboard <span class="arrow-circle"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="7" y1="17" x2="17" y2="7" /><polyline points="7 7 17 7 17 17" /></svg></span>`;
+    }
   } else {
     if (loginBtn) loginBtn.style.display = 'inline-flex';
     if (badge) badge.style.display = 'none';
 
     if (landingHeroLoginBtn) landingHeroLoginBtn.style.display = 'inline-flex';
+    if (heroCtaBtn) {
+      heroCtaBtn.innerHTML = `Sign In & Launch <span class="arrow-circle"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="7" y1="17" x2="17" y2="7" /><polyline points="7 7 17 7 17 17" /></svg></span>`;
+    }
   }
 }
 
@@ -149,6 +168,7 @@ async function loginWithGoogle() {
       updateAuthUI(true);
       if (!currentUser.onboarded) openNtfyModal(false);
       await loadWatchlist();
+      enterAppDirectly();
     }
     return;
   }
@@ -157,18 +177,26 @@ async function loginWithGoogle() {
   try {
     await firebase.auth().signInWithPopup(provider);
   } catch (e) {
-    alert("Google Sign-In Notice: " + e.message);
+    console.error("Popup sign-in failed, trying redirect:", e);
+    try {
+      await firebase.auth().signInWithRedirect(provider);
+    } catch (err) {
+      alert("Sign-in failed: " + err.message);
+    }
   }
 }
 
-function logoutFirebase() {
-  localStorage.removeItem('vesper_current_user');
-  if (firebaseInitialized && firebase.auth().currentUser) {
-    firebase.auth().signOut();
+async function logoutFirebase() {
+  try {
+    if (firebaseInitialized && firebase.auth) {
+      await firebase.auth().signOut();
+    }
+  } catch (e) {
+    console.warn(e);
   }
   currentUser = null;
+  localStorage.removeItem('vesper_current_user');
   updateAuthUI(false);
-  loadWatchlist();
   showLandingPage();
 }
 
@@ -182,7 +210,7 @@ function hashCode(str) {
 }
 
 /* ==========================================================================
-   About VESPER Modal Logic
+   Modals & Onboarding
    ========================================================================== */
 function openAboutModal() {
   const modal = document.getElementById('aboutModal');
@@ -194,17 +222,25 @@ function closeAboutModal() {
   if (modal) modal.style.display = 'none';
 }
 
-/* ==========================================================================
-   ntfy Push Notification & Profile Onboarding Modal
-   ========================================================================== */
 function openNtfyModal(isEdit = false) {
   const modal = document.getElementById('ntfyModal');
   const topicInput = document.getElementById('ntfyTopicInput');
   const publicToggle = document.getElementById('publicProfileToggle');
-  const modalTitle = document.querySelector('#ntfyModal .modal-header h2');
+  const modalTitle = document.getElementById('ntfyModalTitle');
+  const modalAvatar = document.getElementById('modalProfileAvatar');
+  const modalName = document.getElementById('modalProfileName');
+  const modalEmail = document.getElementById('modalProfileEmail');
+
+  if (currentUser) {
+    if (modalAvatar) {
+      modalAvatar.src = currentUser.photo_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(currentUser.uid || 'user')}`;
+    }
+    if (modalName) modalName.innerText = currentUser.display_name || 'VESPER Member';
+    if (modalEmail) modalEmail.innerText = currentUser.email || '';
+  }
 
   if (modalTitle) {
-    modalTitle.innerText = isEdit ? 'Notification & Profile Settings' : 'Onboarding: Set Up Push Alerts';
+    modalTitle.innerText = isEdit ? 'Account & Settings' : 'Onboarding: Set Up Push Alerts';
   }
 
   let defaultTopic = currentUser ? (currentUser.ntfy_topic || `vesper-${currentUser.uid.substring(0,8)}`) : 'vesper-cinema-updates';
@@ -310,16 +346,24 @@ function showLandingPage() {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-function enterAppDirectly() {
+function enterAppDirectly(preferredTab = 'watchlist') {
+  if (!currentUser) {
+    loginWithGoogle();
+    return;
+  }
   const landing = document.getElementById('landingPage');
   const mainApp = document.getElementById('mainAppView');
   if (landing) landing.style.display = 'none';
   if (mainApp) mainApp.style.display = 'block';
-  switchTab('watchlist');
+  switchTab(preferredTab);
 }
 
 function switchTab(tabName) {
-  if (tabName === 'social' && !requireAuth("Please sign in with Google to access friends and social watchlists.")) return;
+  if (!currentUser) {
+    showLandingPage();
+    loginWithGoogle();
+    return;
+  }
   const landing = document.getElementById('landingPage');
   const mainApp = document.getElementById('mainAppView');
   if (landing) landing.style.display = 'none';
@@ -1163,6 +1207,11 @@ function createMediaCard(item, isInWatchlist = false, isFriendList = false, frie
 let currentDetailsContext = null;
 
 async function openDetailsPage(id, mediaType, localItem = {}) {
+  if (!currentUser) {
+    showLandingPage();
+    loginWithGoogle();
+    return;
+  }
   openDetailsView();
   const pageContent = document.getElementById('detailsPageContent');
   pageContent.innerHTML = `
@@ -2309,4 +2358,71 @@ function escapeHtml(str) {
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;');
 }
+
+/* Global Modal Dismissal on Outside Backdrop Click & Escape Key */
+window.addEventListener('click', (e) => {
+  if (e.target && e.target.classList.contains('modal-overlay')) {
+    e.target.style.display = 'none';
+  }
+});
+
+window.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    document.querySelectorAll('.modal-overlay').forEach(modal => {
+      modal.style.display = 'none';
+    });
+  }
+});
+
+/* Touch Drag Gesture to Dismiss Mobile Modal Bottom Sheets */
+function initBottomSheetTouchGestures() {
+  document.querySelectorAll('.modal-card').forEach(card => {
+    let startY = 0;
+    let currentY = 0;
+    let isDragging = false;
+
+    card.addEventListener('touchstart', (e) => {
+      // Only drag if on mobile screen size
+      if (window.innerWidth > 768) return;
+      const body = card.querySelector('.modal-body, .about-modal-body');
+      if (body && body.scrollTop > 0 && !e.target.closest('.modal-sheet-handle, .modal-header')) {
+        return;
+      }
+      startY = e.touches[0].clientY;
+      currentY = startY;
+      isDragging = true;
+      card.style.transition = 'none';
+    }, { passive: true });
+
+    card.addEventListener('touchmove', (e) => {
+      if (!isDragging || window.innerWidth > 768) return;
+      currentY = e.touches[0].clientY;
+      const diffY = currentY - startY;
+      if (diffY > 0) {
+        card.style.transform = `translateY(${diffY}px)`;
+      }
+    }, { passive: true });
+
+    card.addEventListener('touchend', () => {
+      if (!isDragging || window.innerWidth > 768) return;
+      isDragging = false;
+      const diffY = currentY - startY;
+      card.style.transition = 'transform 0.25s cubic-bezier(0.16, 1, 0.3, 1)';
+      if (diffY > 100) {
+        const modalOverlay = card.closest('.modal-overlay');
+        if (modalOverlay) {
+          card.style.transform = 'translateY(100%)';
+          setTimeout(() => {
+            modalOverlay.style.display = 'none';
+            card.style.transform = '';
+          }, 220);
+        }
+      } else {
+        card.style.transform = '';
+      }
+    }, { passive: true });
+  });
+}
+
+
 
