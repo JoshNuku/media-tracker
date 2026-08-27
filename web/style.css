@@ -3192,7 +3192,7 @@ input:focus {
   .modal-overlay {
     align-items: flex-end !important;
     justify-content: center !important;
-    padding: 0 0 calc(75px + env(safe-area-inset-bottom, 0px)) 0 !important;
+    padding: 0 0 calc(90px + env(safe-area-inset-bottom, 0px)) 0 !important;
     background: rgba(0, 0, 0, 0.75) !important;
     backdrop-filter: blur(8px) !important;
     -webkit-backdrop-filter: blur(8px) !important;
@@ -3209,8 +3209,8 @@ input:focus {
     border-top: 1px solid var(--g-border) !important;
     border-bottom: 1px solid var(--g-border) !important;
     margin: 0 !important;
-    max-height: calc(100dvh - 130px) !important;
-    max-height: calc(100vh - 130px) !important;
+    max-height: calc(100dvh - 160px) !important;
+    max-height: calc(100vh - 160px) !important;
     display: flex !important;
     flex-direction: column !important;
     overflow: hidden !important;
@@ -3266,7 +3266,7 @@ input:focus {
   .modal-footer {
     display: flex !important;
     align-items: center !important;
-    justify-content: space-between !important;
+    justify-content: flex-end !important;
     gap: 0.75rem !important;
     margin-top: auto !important;
     padding: 0.85rem 1.25rem !important;
@@ -3279,7 +3279,7 @@ input:focus {
 
   .modal-footer .g-btn {
     min-height: 42px !important;
-    padding: 0.6rem 1rem !important;
+    padding: 0.6rem 1.25rem !important;
     font-size: 0.885rem !important;
     display: inline-flex !important;
     align-items: center !important;
