@@ -91,7 +91,10 @@ function initFirebase() {
         }
 
         await loadWatchlist();
-        enterAppDirectly();
+        const landing = document.getElementById('landingPage');
+        if (landing && landing.style.display !== 'none') {
+          enterAppDirectly(activeTab || 'watchlist');
+        }
 
       } else {
         // Guest mode / signed out
