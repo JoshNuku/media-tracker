@@ -1,82 +1,725 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Media Tracker Manager</title>
+  <title>VESPER — Cinema Intelligence</title>
+  <!-- Google Sans Fonts Preconnect & Stylesheet -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Google+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,700&family=Google+Sans+Text:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&display=swap"
+    rel="stylesheet">
+
   <link rel="stylesheet" href="style.css">
+
+  <!-- Firebase JS SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
 </head>
+
 <body>
 
-  <!-- Shared Application Header -->
-  <header class="app-header">
-    <div class="header-brand" onclick="showDashboardView()" style="cursor: pointer;">
-      <svg class="header-logo-icon" width="32" height="32" viewBox="0 0 24 24" fill="var(--g-blue)">
-        <path d="M18 4l2 4h-3l-2-4h-2l2 4h-3l-2-4H9l2 4H8L6 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4h-4z"/>
-      </svg>
-      <h1 class="app-title">Media Tracker <span>Manager</span></h1>
+  <!-- Minimalist Landing Page (MoundIQ Style) -->
+  <div id="landingPage" class="landing-hero-view">
+
+    <!-- Top Navigation Header -->
+    <header class="landing-header">
+      <div class="landing-logo">VESPER</div>
+      <nav class="landing-nav-pill">
+        <a href="#landingPage" onclick="showLandingPage()">Home</a>
+        <a href="#features" onclick="enterAppDirectly(); switchTab('search');">Discover</a>
+        <a href="#social" onclick="enterAppDirectly(); switchTab('social');">Friends</a>
+        <a href="#recs" onclick="enterAppDirectly(); switchTab('recs');">For You</a>
+        <a href="javascript:void(0)" onclick="openAboutModal()">About</a>
+      </nav>
+    </header>
+
+    <div class="hero-content">
+      <!-- Trust Badge -->
+      <div class="hero-trust-badge">
+        <div class="avatar-stack">
+          <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=80&q=80"
+            alt="User">
+          <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=80&q=80"
+            alt="User">
+          <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=80&q=80"
+            alt="User">
+        </div>
+        <span>Connected Cinema Community</span>
+      </div>
+
+      <h1 class="hero-title">Track Smarter.<br>Watch Together.</h1>
+      <p class="hero-subtitle">
+        Your all-in-one cinema companion — track movies and TV shows, stream in 1-click, share watchlists with friends,
+        and receive push notifications on release day.
+      </p>
+
+      <div class="hero-cta-group">
+        <button class="landing-btn-dark" onclick="enterAppDirectly()">
+          Launch Dashboard <span class="arrow-circle"><svg width="12" height="12" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="7" y1="17" x2="17" y2="7" />
+              <polyline points="7 7 17 7 17 17" />
+            </svg></span>
+        </button>
+        <button class="landing-btn-outline" id="landingHeroLoginBtn" onclick="loginWithGoogle()">
+          Sign in with Google
+        </button>
+      </div>
+
+      <!-- Feature Grid -->
+      <div class="hero-features-grid">
+        <div class="feature-card">
+          <h3>Free HD Streaming</h3>
+          <p>Instant 1-click access to HydraHD for any movie or TV series.</p>
+        </div>
+        <div class="feature-card">
+          <h3> Watch Reminders</h3>
+          <p>Schedule watch times with 1-tap presets, Google Calendar sync & push notifications.</p>
+        </div>
+        <div class="feature-card">
+          <h3>Automated Release Alerts</h3>
+          <p>7, 3 & 1-day countdown push notifications when upcoming episodes or movies drop.</p>
+        </div>
+        <div class="feature-card">
+          <h3>Social & Reviews</h3>
+          <p>Share watchlists with friends, leave 5-star ratings, and join discussion threads.</p>
+        </div>
+      </div>
     </div>
+  </div>
 
-    <button id="themeToggleBtn" class="theme-toggle-btn" onclick="toggleTheme()" aria-label="Toggle Theme">
-      <span id="themeToggleIcon">☀️</span> <span id="themeToggleText">Light</span>
-    </button>
-  </header>
+  <!-- Main App View (Header + Content Wrapper) -->
+  <div id="mainAppView" style="display: none;">
 
-  <!-- Main Dashboard View Page -->
-  <div id="dashboardView" class="page-view">
+    <!-- Shared Application Header -->
+    <header class="app-header">
+      <div class="header-brand" onclick="showLandingPage()" style="cursor: pointer;">
+        <h1 class="app-title">VESPER <span>Cinema</span></h1>
+      </div>
 
+      <!-- Navigation Tabs -->
+      <nav class="app-nav">
+        <button class="nav-tab active" id="tabWatchlist" onclick="switchTab('watchlist')">
+          <svg class="tab-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
+          </svg>
+          <span>Watchlist</span>
+        </button>
+        <button class="nav-tab" id="tabSearch" onclick="switchTab('search')">
+          <svg class="tab-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10" />
+            <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76" />
+          </svg>
+          <span>Discover</span>
+        </button>
+        <button class="nav-tab" id="tabSocial" onclick="switchTab('social')">
+          <svg class="tab-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+            <circle cx="9" cy="7" r="4" />
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+            <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+          </svg>
+          <span>Friends</span>
+        </button>
+        <button class="nav-tab" id="tabRecs" onclick="switchTab('recs')">
+          <svg class="tab-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon
+              points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+          </svg>
+          <span>For You</span>
+        </button>
+      </nav>
 
-    <div class="search-container">
-      <div class="search-box">
-        <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24">
-          <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
-        </svg>
-        <input type="text" id="searchInput" placeholder="Search movies or TV shows..." onkeypress="if(event.key==='Enter') searchMedia()">
-        <button class="g-btn" onclick="searchMedia()">Search</button>
+      <div class="header-actions">
+        <!-- Auth Status / Google Login -->
+        <div id="authContainer">
+          <button id="googleLoginBtn" class="g-btn g-btn-google" onclick="loginWithGoogle()">
+            <svg width="16" height="16" viewBox="0 0 24 24" style="margin-right:6px;">
+              <path fill="#4285F4"
+                d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+              <path fill="#34A853"
+                d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+              <path fill="#FBBC05"
+                d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
+              <path fill="#EA4335"
+                d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
+            </svg>
+            Sign in
+          </button>
+          <div id="userProfileBadge" style="display:none; align-items:center; gap:0.4rem;">
+            <img id="userAvatar" class="user-avatar-img" src="https://api.dicebear.com/7.x/avataaars/svg?seed=user" alt="Avatar" referrerpolicy="no-referrer" onclick="openNtfyModal(true)"
+              title="Edit Settings" onerror="this.src='https://api.dicebear.com/7.x/avataaars/svg?seed=user'">
+            <span id="userName" class="user-display-name">User</span>
+            <!-- Settings Icon Button -->
+            <button class="header-icon-btn" onclick="openNtfyModal(true)" title="Settings & Notifications"
+              aria-label="Settings">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="3" />
+                <path
+                  d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
+              </svg>
+            </button>
+            <!-- Sign Out Icon Button -->
+            <button class="header-icon-btn" onclick="logoutFirebase()" title="Sign Out" aria-label="Sign Out">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                <polyline points="16 17 21 12 16 7" />
+                <line x1="21" y1="12" x2="9" y2="12" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- About / Info Icon Button -->
+        <button class="header-icon-btn" onclick="openAboutModal()" title="About VESPER & How It Works"
+          aria-label="About">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10" />
+            <line x1="12" y1="16" x2="12" y2="12" />
+            <line x1="12" y1="8" x2="12.01" y2="8" />
+          </svg>
+        </button>
+
+        <!-- Theme Toggle Icon Button -->
+        <button id="themeToggleBtn" class="header-icon-btn theme-toggle-btn" onclick="toggleTheme()"
+          aria-label="Toggle Theme" title="Toggle Theme">
+          <svg id="themeIconSun" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none;">
+            <circle cx="12" cy="12" r="5" />
+            <line x1="12" y1="1" x2="12" y2="3" />
+            <line x1="12" y1="21" x2="12" y2="23" />
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+            <line x1="1" y1="12" x2="3" y2="12" />
+            <line x1="21" y1="12" x2="23" y2="12" />
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+          </svg>
+          <svg id="themeIconMoon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- About VESPER Modal -->
+    <div id="aboutModal" class="modal-overlay" style="display: none;">
+      <div class="modal-card about-modal-card">
+        <div class="modal-header">
+          <div style="display: flex; align-items: center; gap: 0.65rem;">
+            <div class="about-logo-badge">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path
+                  d="M19.82 2H4.18C2.97 2 2 2.97 2 4.18v15.64C2 21.03 2.97 22 4.18 22h15.64c1.21 0 2.18-.97 2.18-2.18V4.18C22 2.97 21.03 2 19.82 2z" />
+                <path d="M7 2v20" />
+                <path d="M17 2v20" />
+                <path d="M2 12h20" />
+                <path d="M2 7h5" />
+                <path d="M2 17h5" />
+                <path d="M17 17h5" />
+                <path d="M17 7h5" />
+              </svg>
+            </div>
+            <div>
+              <h2 style="margin: 0; font-size: 1.25rem;">About VESPER</h2>
+              <p style="margin: 0; font-size: 0.8rem; color: var(--g-subtext);">Cinematic Companion & Release
+                Intelligence</p>
+            </div>
+          </div>
+          <button class="modal-close-btn" onclick="closeAboutModal()"><svg width="18" height="18" viewBox="0 0 24 24"
+              fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg></button>
+        </div>
+        <div class="modal-body about-modal-body">
+          <div class="about-intro-text">
+            <strong>VESPER</strong> tracks theatrical, digital, VOD, and physical media releases — delivering automated
+            countdown alerts straight to your devices so you never miss a premiere.
+          </div>
+
+          <div class="about-feature-block">
+            <div class="about-block-title">
+              <span class="about-block-icon">🔔</span>
+              <h4>Smart Release Alert Cadence (7, 3, & 1 Day)</h4>
+            </div>
+            <p>Our automated background engine monitors global digital and premiere calendars for titles in your
+              watchlist, sending countdown reminders:</p>
+            <div class="about-cadence-grid">
+              <div class="cadence-step">
+                <div class="cadence-pill">7 Days Out</div>
+                <div class="cadence-desc">Early warning to get ready for next week’s drop.</div>
+              </div>
+              <div class="cadence-step">
+                <div class="cadence-pill">3 Days Out</div>
+                <div class="cadence-desc">Mid-week reminder as release day approaches.</div>
+              </div>
+              <div class="cadence-step">
+                <div class="cadence-pill">1 Day & Drop</div>
+                <div class="cadence-desc">Premiere day alert with instant streaming links.</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="about-feature-block">
+            <div class="about-block-title">
+              <span class="about-block-icon">⏰</span>
+              <h4>Custom Watch Reminders & Calendar Sync</h4>
+            </div>
+            <p>Schedule exact watch dates and times for any movie or TV series. Use 1-tap presets (Tonight, Tomorrow,
+              Weekend Movie Night), sync with Google Calendar, and receive high-priority push notifications when it's
+              time to stream.</p>
+          </div>
+
+          <div class="about-feature-block">
+            <div class="about-block-title">
+              <span class="about-block-icon">📺</span>
+              <h4>Next Episode & Season Air Date Tracking</h4>
+            </div>
+            <p>For ongoing TV series in your watchlist, VESPER automatically tracks the exact air dates, episode titles,
+              and season premiere drops so you never miss what’s next.</p>
+          </div>
+
+          <div class="about-feature-block">
+            <div class="about-block-title">
+              <span class="about-block-icon">📱</span>
+              <h4>Push Notifications via ntfy.sh</h4>
+            </div>
+            <p>Subscribe to your private topic in the free <strong>ntfy</strong> app (iOS / Android / Desktop) for
+              instant push notifications with rich tags, alert sounds, and direct action links.</p>
+          </div>
+
+          <div class="about-feature-block">
+            <div class="about-block-title">
+              <span class="about-block-icon">🍿</span>
+              <h4>Instant Free Streaming on HydraHD</h4>
+            </div>
+            <p>Enjoy 1-click access to stream free HD movies and TV series directly on HydraHD without wading through
+              ads or extra steps.</p>
+          </div>
+
+          <div class="about-feature-block">
+            <div class="about-block-title">
+              <span class="about-block-icon">👥</span>
+              <h4>Friends, Ratings & Threaded Discussions</h4>
+            </div>
+            <p>Share watchlists, follow friends, leave 1-to-5 star ratings with written reviews, and reply to comments
+              with nested threaded discussions.</p>
+          </div>
+
+          <div class="about-credits-box">
+            <div class="built-by-badge">
+              <span>Built by <strong>Josh</strong></span>
+            </div>
+            <p style="margin:0.4rem 0 0 0; font-size:0.75rem; color:var(--g-subtext);">Powered by TMDB API & ntfy.sh</p>
+          </div>
+        </div>
+        <div class="modal-footer" style="display:flex; justify-content:flex-end;">
+          <button class="g-btn" onclick="closeAboutModal()">Got it</button>
+        </div>
       </div>
     </div>
 
-    <main class="dashboard-stack">
-      <!-- Search Results Section -->
-      <section class="dashboard-section">
+    <!-- ntfy Push Notification & Profile Onboarding Modal -->
+    <div id="ntfyModal" class="modal-overlay" style="display: none;">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h2>Onboarding: Set Up Push Alerts</h2>
+          <button class="modal-close-btn" onclick="closeNtfyModal()"><svg width="18" height="18" viewBox="0 0 24 24"
+              fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg></button>
+        </div>
+        <div class="modal-body">
+
+          <!-- Step 1: Download Mobile App -->
+          <div class="ntfy-download-banner">
+            <div class="download-banner-title">Step 1: Download the Free ntfy App</div>
+            <p class="download-banner-desc">Get instant push notifications on your phone when movies release or friends
+              connect.</p>
+            <div class="app-download-buttons">
+              <a href="https://play.google.com/store/apps/details?id=io.heckel.ntfy" target="_blank" rel="noopener"
+                class="app-store-btn">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                  <path
+                    d="M3.6 2.25c-.23.25-.35.61-.35 1.07v17.36c0 .46.12.82.35 1.07l.06.05 9.72-9.72v-.22L3.66 2.2l-.06.05zm13.16 6.36l-3.21 3.21 3.21 3.21 3.65-2.07c1.04-.59 1.04-1.56 0-2.15l-3.65-2.2zm-3.21 3.21L3.83 2.09c.32-.14.71-.14 1.14.1l11.75 6.68-3.17 2.95zm0 0l3.17 2.95-11.75 6.68c-.43.24-.82.24-1.14.1l9.72-9.73z" />
+                </svg>
+                Google Play Store
+              </a>
+              <a href="https://apps.apple.com/us/app/ntfy/id1625396347" target="_blank" rel="noopener"
+                class="app-store-btn">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                  <path
+                    d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 6.36c.68-.83 1.15-1.99.99-3.16-1 .04-2.21.67-2.9 1.48-.62.72-1.16 1.89-.98 3.03 1.12.09 2.26-.57 2.89-1.35z" />
+                </svg>
+                Apple App Store
+              </a>
+            </div>
+          </div>
+
+          <!-- Step 2: Topic Subscription -->
+          <div class="download-banner-title" style="margin-top:1.25rem;">Step 2: Subscribe to Your Topic</div>
+          <div class="form-group" style="margin-top:0.4rem;">
+            <label for="ntfyTopicInput">Your Unique ntfy Topic</label>
+            <input type="text" id="ntfyTopicInput" placeholder="e.g. vesper-user-1234">
+          </div>
+
+          <div class="ntfy-action-box">
+            <a id="ntfySubscribeLink" href="https://ntfy.sh" target="_blank" rel="noopener"
+              class="g-btn g-btn-secondary" style="text-decoration:none;">
+              Open 1-Tap Subscribe on ntfy.sh
+            </a>
+            <button class="g-btn g-btn-secondary" onclick="sendTestPushAlert()">
+              Send Test Push Notification
+            </button>
+          </div>
+
+          <hr class="modal-divider">
+
+          <div class="form-group-checkbox">
+            <input type="checkbox" id="publicProfileToggle" checked>
+            <label for="publicProfileToggle">Make my profile & watchlist public to other users</label>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="g-btn g-btn-full" onclick="saveNtfyOnboarding()">Save & Complete Setup</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Rating & Review Modal -->
+    <div id="ratingModal" class="modal-overlay" style="display: none;">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h2 id="ratingModalTitle">Rate & Review</h2>
+          <button class="modal-close-btn" onclick="closeRatingModal()"><svg width="18" height="18" viewBox="0 0 24 24"
+              fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg></button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group" style="text-align: center;">
+            <label>Your Score</label>
+            <div class="star-rating-input" id="modalStarInput"
+              style="justify-content: center; font-size: 2rem; margin: 0.5rem 0;">
+              <span onclick="setRatingScore(1)" onmouseenter="previewRatingScore(1)"
+                onmouseleave="resetRatingPreview()"><svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
+                </svg></span>
+              <span onclick="setRatingScore(2)" onmouseenter="previewRatingScore(2)"
+                onmouseleave="resetRatingPreview()"><svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
+                </svg></span>
+              <span onclick="setRatingScore(3)" onmouseenter="previewRatingScore(3)"
+                onmouseleave="resetRatingPreview()"><svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
+                </svg></span>
+              <span onclick="setRatingScore(4)" onmouseenter="previewRatingScore(4)"
+                onmouseleave="resetRatingPreview()"><svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
+                </svg></span>
+              <span onclick="setRatingScore(5)" onmouseenter="previewRatingScore(5)"
+                onmouseleave="resetRatingPreview()"><svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
+                </svg></span>
+            </div>
+            <div id="modalRatingScoreLabel"
+              style="font-weight:700; color:#f59e0b; font-size:1rem; margin-bottom:0.5rem;">5 / 5 — Masterpiece</div>
+          </div>
+          <div class="form-group">
+            <label for="modalReviewText">Your Review (Optional)</label>
+            <textarea id="modalReviewText" placeholder="Write your thoughts or review..."></textarea>
+          </div>
+        </div>
+        <div class="modal-footer" style="display: flex; gap: 0.5rem; justify-content: flex-end;">
+          <button class="g-btn g-btn-secondary" onclick="closeRatingModal()">Cancel</button>
+          <button class="g-btn" onclick="saveRatingFromModal()">Submit Rating</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Comment Modal -->
+    <div id="commentModal" class="modal-overlay" style="display: none;">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h2 id="commentModalTitle">Post a Comment</h2>
+          <button class="modal-close-btn" onclick="closeCommentModal()"><svg width="18" height="18" viewBox="0 0 24 24"
+              fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg></button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="modalCommentText">Comment</label>
+            <textarea id="modalCommentText" placeholder="Write a comment or start a discussion..."></textarea>
+          </div>
+        </div>
+        <div class="modal-footer" style="display: flex; gap: 0.5rem; justify-content: flex-end;">
+          <button class="g-btn g-btn-secondary" onclick="closeCommentModal()">Cancel</button>
+          <button class="g-btn" onclick="saveCommentFromModal()">Post Comment</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Custom Watch Reminder Modal -->
+    <div id="reminderModal" class="modal-overlay" style="display: none;">
+      <div class="modal-card" style="max-width: 480px;">
+        <div class="modal-header">
+          <div style="display:flex; align-items:center; gap:0.5rem;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round" style="color:var(--g-blue);">
+              <circle cx="12" cy="12" r="10" />
+              <polyline points="12 6 12 12 16 14" />
+            </svg>
+            <h2 id="reminderModalTitle" style="margin:0; font-size:1.15rem;">Set Watch Reminder</h2>
+          </div>
+          <button class="modal-close-btn" onclick="closeReminderModal()"><svg width="18" height="18" viewBox="0 0 24 24"
+              fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg></button>
+        </div>
+        <div class="modal-body">
+          <p style="font-size:0.85rem; color:var(--g-subtext); margin-top:0; line-height:1.45;">
+            Choose when you want to watch. VESPER will send an instant push notification with 1-click streaming links
+            straight to your devices!
+          </p>
+
+          <!-- Quick Presets -->
+          <div class="form-group" style="margin-top:0.5rem;">
+            <label
+              style="font-weight:600; font-size:0.8rem; color:var(--g-subtext); margin-bottom:0.4rem; display:block;">Quick
+              Presets</label>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.5rem;">
+              <button type="button" class="preset-time-btn" onclick="setReminderPreset('tonight')">🌙 Tonight (8
+                PM)</button>
+              <button type="button" class="preset-time-btn" onclick="setReminderPreset('tomorrow')">☀️ Tomorrow (8
+                PM)</button>
+              <button type="button" class="preset-time-btn" onclick="setReminderPreset('friday')">🍿 Friday (8
+                PM)</button>
+              <button type="button" class="preset-time-btn" onclick="setReminderPreset('saturday')">🎬 Saturday (8
+                PM)</button>
+            </div>
+          </div>
+
+          <!-- Date & Time Picker -->
+          <div class="form-group" style="margin-top:1rem;">
+            <label for="reminderDatetimeInput">Date & Time</label>
+            <input type="datetime-local" id="reminderDatetimeInput" style="width:100%; box-sizing:border-box;">
+          </div>
+
+          <!-- Optional Note -->
+          <div class="form-group" style="margin-top:0.75rem;">
+            <label for="reminderNoteInput">Note (Optional)</label>
+            <input type="text" id="reminderNoteInput" placeholder="e.g. Watch with friends on Discord, or movie night">
+          </div>
+
+          <!-- Calendar Integration -->
+          <div
+            style="display:flex; justify-content:space-between; align-items:center; margin-top:0.75rem; padding-top:0.75rem; border-top:1px solid var(--g-border); flex-wrap:wrap; gap:0.5rem;">
+            <span style="font-size:0.8rem; color:var(--g-subtext);">Sync to calendar:</span>
+            <button type="button" class="activity-pill-btn" onclick="openGoogleCalendarReminder()"
+              style="font-size:0.775rem;">
+              📅 Add to Google Calendar
+            </button>
+          </div>
+        </div>
+        <div class="modal-footer" style="display: flex; gap: 0.5rem; justify-content: flex-end;">
+          <button class="g-btn g-btn-secondary" onclick="closeReminderModal()">Cancel</button>
+          <button class="g-btn" onclick="saveReminderFromModal()">Set Reminder</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Container -->
+    <div class="main-content-wrapper">
+
+      <!-- 1. My Watchlist Tab -->
+      <div id="watchlistTab" class="tab-page active">
+        <div class="section-header" style="flex-wrap:wrap; gap:0.75rem;">
+          <h2 class="section-title">
+            <span id="watchlistSectionTitle">My Watchlist</span>
+            <span id="count" class="count-badge">0</span>
+          </h2>
+          <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
+            <button id="saveBtn" class="g-btn g-btn-secondary" onclick="saveWatchlistDirectly()">
+              Save Watchlist
+            </button>
+          </div>
+        </div>
+
+        <!-- Watchlist & Activity Filter Pills -->
+        <div class="discover-pills-row" style="margin-bottom: 1.5rem;">
+          <button class="discover-pill active" id="pill-watch-all" onclick="filterWatchlistView('all')">All
+            Titles</button>
+          <button class="discover-pill" id="pill-watch-movie" onclick="filterWatchlistView('movie')">🎬 Movies</button>
+          <button class="discover-pill" id="pill-watch-tv" onclick="filterWatchlistView('tv')">📺 TV Shows</button>
+          <button class="discover-pill" id="pill-watch-reminders" onclick="filterWatchlistView('reminders')">⏰ Reminders
+            (<span id="userRemindersCount">0</span>)</button>
+          <button class="discover-pill" id="pill-watch-rated" onclick="filterWatchlistView('rated')">⭐ My Ratings (<span
+              id="userRatingsCount">0</span>)</button>
+          <button class="discover-pill" id="pill-watch-commented" onclick="filterWatchlistView('commented')">My
+            Comments (<span id="userCommentsCount">0</span>)</button>
+        </div>
+
+        <div id="watchlist" class="media-grid"></div>
+      </div>
+
+      <!-- 2. Search & Discover Tab -->
+      <div id="searchTab" class="tab-page">
+        <div class="search-container">
+          <div class="search-box">
+            <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24">
+              <path
+                d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" />
+            </svg>
+            <input type="text" id="searchInput" placeholder="Search any movie or TV show..."
+              onkeypress="if(event.key==='Enter') searchMedia()">
+            <button class="g-btn" onclick="searchMedia()">Search</button>
+          </div>
+
+          <!-- Discover Filter Pills -->
+          <div class="discover-pills-row">
+            <button class="discover-pill active" id="pill-trending" onclick="loadDiscoverCategory('trending')">🔥
+              Trending</button>
+            <button class="discover-pill" id="pill-popular_movies" onclick="loadDiscoverCategory('popular_movies')">🎬
+              Popular Movies</button>
+            <button class="discover-pill" id="pill-popular_tv" onclick="loadDiscoverCategory('popular_tv')">📺 Popular
+              TV</button>
+            <button class="discover-pill" id="pill-upcoming" onclick="loadDiscoverCategory('upcoming')">⏳ Upcoming
+              Releases</button>
+            <button class="discover-pill" id="pill-now_playing" onclick="loadDiscoverCategory('now_playing')">🍿 In
+              Theaters</button>
+          </div>
+        </div>
+
         <div class="section-header">
-          <h2 class="section-title">Search Results</h2>
+          <h2 class="section-title" id="discoverSectionTitle">Trending This Week</h2>
         </div>
         <div id="searchResults" class="media-grid">
           <div class="empty-state">
-            <svg width="48" height="48" viewBox="0 0 24 24"><path fill="currentColor" d="M18 4l2 4h-3l-2-4h-2l2 4h-3l-2-4H9l2 4H8L6 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4h-4z"/></svg>
-            <p>Type a title above and press Search to discover movies & TV shows.</p>
+            <p>Loading trending titles...</p>
           </div>
         </div>
-      </section>
+      </div>
 
-      <!-- Current Watchlist Section -->
-      <section class="dashboard-section">
-        <div class="section-header">
-          <h2 class="section-title">
-            Current Watchlist
-            <span id="count" class="count-badge">0</span>
-          </h2>
-          <button id="saveBtn" class="g-btn g-btn-secondary" onclick="saveWatchlistDirectly()">
-            <span>💾</span> Save Watchlist
-          </button>
+      <!-- 3. Friends & Social Tab -->
+      <div id="socialTab" class="tab-page">
+        <div class="social-container">
+          <div class="social-sidebar">
+            <!-- Accordion 1: Connected Friends -->
+            <div class="sidebar-accordion active" id="accordionFriends">
+              <button class="accordion-header" onclick="toggleSidebarAccordion('accordionFriends')" type="button">
+                <div class="accordion-title-wrap">
+                  <svg class="accordion-icon" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                    <circle cx="9" cy="7" r="4" />
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                  </svg>
+                  <span>Connected Friends</span>
+                  <span id="friendsCountBadge" class="count-badge"
+                    style="margin-left:0.35rem; font-size:0.75rem;">0</span>
+                </div>
+                <svg class="accordion-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="6 9 12 15 18 9" />
+                </svg>
+              </button>
+              <div class="accordion-content">
+                <div id="friendsList" class="user-list"></div>
+              </div>
+            </div>
+
+            <!-- Accordion 2: Find Users -->
+            <div class="sidebar-accordion active" id="accordionFindUsers">
+              <button class="accordion-header" onclick="toggleSidebarAccordion('accordionFindUsers')" type="button">
+                <div class="accordion-title-wrap">
+                  <svg class="accordion-icon" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="11" cy="11" r="8" />
+                    <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                  </svg>
+                  <span>Find Users</span>
+                </div>
+                <svg class="accordion-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="6 9 12 15 18 9" />
+                </svg>
+              </button>
+              <div class="accordion-content">
+                <div class="search-box" style="margin-bottom:0.85rem;">
+                  <input type="text" id="userSearchInput" placeholder="Search display name..."
+                    onkeypress="if(event.key==='Enter') searchPublicUsers()">
+                  <button class="g-btn" onclick="searchPublicUsers()">Search</button>
+                </div>
+                <div id="userSearchResults" class="user-list"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="social-main">
+            <div id="friendWatchlistHeader" class="section-header">
+              <h2 id="friendWatchlistTitle" class="section-title">Select a user to view their watchlist</h2>
+            </div>
+            <div id="friendWatchlistGrid" class="media-grid">
+              <div class="empty-state">
+                <p>Click "View Watchlist" on any public user to inspect their saved titles and add them to your own list
+                  with 1 click.</p>
+              </div>
+            </div>
+          </div>
         </div>
-        
-        <div id="watchlist" class="media-grid"></div>
-      </section>
-    </main>
-  </div>
+      </div>
 
-  <!-- Dedicated Media Details Full Page View -->
-  <div id="detailsPage" class="page-view" style="display: none;">
-    <div class="details-nav-bar">
-      <button class="g-btn g-btn-secondary" onclick="showDashboardView()">
-        <span>←</span> Back to Dashboard
-      </button>
+      <!-- 4. Recommendations Tab -->
+      <div id="recsTab" class="tab-page">
+        <div class="section-header">
+          <h2 class="section-title">Recommended for You</h2>
+        </div>
+        <div id="recsResults" class="media-grid">
+          <div class="empty-state">
+            <p>Add titles to your watchlist to unlock tailored movie recommendations.</p>
+          </div>
+        </div>
+      </div>
+
     </div>
-    <div id="detailsPageContent" class="details-page-card"></div>
+
+    <!-- Dedicated Media Details Full Page View -->
+    <div id="detailsPage" class="page-view" style="display: none;">
+      <div class="details-nav-bar">
+        <button class="g-btn g-btn-secondary" onclick="closeDetailsPage()"
+          style="display:inline-flex; align-items:center; gap:6px;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <line x1="19" y1="12" x2="5" y2="12" />
+            <polyline points="12 19 5 12 12 5" />
+          </svg> Back to Dashboard
+        </button>
+      </div>
+      <div id="detailsPageContent" class="details-page-card"></div>
+    </div>
+
   </div>
 
   <script src="app.js"></script>
 </body>
+
 </html>
