@@ -318,35 +318,42 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
                 self._send_json_response(500, {"error": "Failed to dispatch test notification to ntfy.sh."})
 
         elif path in ('/save-watchlist', '/api/watchlist'):
-            # Check if bulk array or single item addition
-            if isinstance(body, list):
-                user_id = self.headers.get('X-User-Id', 'default_user')
-                save_watchlist(body, user_id=user_id)
-                self._send_json_response(200, {"status": "success", "message": f"Watchlist saved for {user_id}!"})
-            else:
-                user_id = body.get('user_id') or self.headers.get('X-User-Id', 'default_user')
-                item = body.get('item') or body
-                copied_from_uid = body.get('copied_from_uid')
-                
-                success = add_to_watchlist(item, user_id=user_id)
-                
-                # Notify original owner if copied from another user's watchlist
-                if success and copied_from_uid:
-                    original_user = get_user(copied_from_uid)
-                    copier_user = get_user(user_id)
-                    copier_name = copier_user.get('display_name') if copier_user else "A friend"
-                    if original_user and original_user.get('ntfy_topic'):
-                        send_user_ntfy(
-                            original_user['ntfy_topic'],
-                            "Watchlist Activity",
-                            f"'{copier_name}' added '{item.get('title')}' from your watchlist into theirs!",
-                            tags="sparkles,clapper"
-                        )
-
-                if success:
-                    self._send_json_response(200, {"status": "success", "message": "Item added to watchlist."})
+            try:
+                # Check if bulk array or single item addition
+                if isinstance(body, list):
+                    user_id = self.headers.get('X-User-Id', 'default_user')
+                    save_watchlist(body, user_id=user_id)
+                    self._send_json_response(200, {"status": "success", "message": f"Watchlist saved for {user_id}!"})
                 else:
-                    self._send_json_response(500, {"error": "Failed to add item to watchlist."})
+                    user_id = body.get('user_id') or self.headers.get('X-User-Id', 'default_user')
+                    item = body.get('item') or body
+                    copied_from_uid = body.get('copied_from_uid')
+                    
+                    success = add_to_watchlist(item, user_id=user_id)
+                    
+                    # Notify original owner if copied from another user's watchlist
+                    if success and copied_from_uid:
+                        try:
+                            original_user = get_user(copied_from_uid)
+                            copier_user = get_user(user_id)
+                            copier_name = copier_user.get('display_name') if copier_user else "A friend"
+                            if original_user and original_user.get('ntfy_topic'):
+                                send_user_ntfy(
+                                    original_user['ntfy_topic'],
+                                    "Watchlist Activity",
+                                    f"'{copier_name}' added '{item.get('title')}' from your watchlist into theirs!",
+                                    tags="sparkles,clapper"
+                                )
+                        except Exception as e_ntfy:
+                            print("[NOTICE] Ntfy notification skipped:", e_ntfy)
+
+                    if success:
+                        self._send_json_response(200, {"status": "success", "message": "Item added to watchlist."})
+                    else:
+                        self._send_json_response(500, {"error": "Failed to add item to watchlist."})
+            except Exception as e:
+                print("[ERROR] /api/watchlist POST failed:", e)
+                self._send_json_response(500, {"error": str(e)})
 
         elif path == '/api/watchlist/remove':
             user_id = body.get('user_id') or self.headers.get('X-User-Id', 'default_user')

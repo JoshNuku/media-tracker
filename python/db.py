@@ -520,25 +520,25 @@ def add_to_watchlist(item, user_id='default_user'):
 
         if db_url:
             try:
-                cursor.execute("""
-                    INSERT INTO watchlist (user_id, tmdb_id, type, title, poster_path, vote_average, release_year, overview, status)
-                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
-                    ON CONFLICT (user_id, tmdb_id) DO UPDATE SET
-                        type = EXCLUDED.type,
-                        title = EXCLUDED.title,
-                        poster_path = EXCLUDED.poster_path,
-                        vote_average = EXCLUDED.vote_average,
-                        release_year = EXCLUDED.release_year,
-                        overview = EXCLUDED.overview,
-                        status = EXCLUDED.status;
-                """, (user_id, tmdb_id, media_type, title, poster_path, v_avg, release_year, overview, status))
-            except Exception as e_conflict:
-                conn.rollback()
-                cursor.execute("DELETE FROM watchlist WHERE user_id = %s AND tmdb_id = %s;", (user_id, tmdb_id))
+                cursor.execute("DELETE FROM watchlist WHERE tmdb_id = %s AND user_id = %s;", (tmdb_id, user_id))
                 cursor.execute("""
                     INSERT INTO watchlist (user_id, tmdb_id, type, title, poster_path, vote_average, release_year, overview, status)
                     VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s);
                 """, (user_id, tmdb_id, media_type, title, poster_path, v_avg, release_year, overview, status))
+            except Exception as e_ins:
+                conn.rollback()
+                try:
+                    cursor.execute("DELETE FROM watchlist WHERE tmdb_id = %s;", (tmdb_id,))
+                    cursor.execute("""
+                        INSERT INTO watchlist (user_id, tmdb_id, type, title, poster_path, vote_average, release_year, overview, status)
+                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s);
+                    """, (user_id, tmdb_id, media_type, title, poster_path, v_avg, release_year, overview, status))
+                except Exception as e_ins2:
+                    conn.rollback()
+                    cursor.execute("""
+                        UPDATE watchlist SET type = %s, title = %s, poster_path = %s, vote_average = %s, release_year = %s, overview = %s, status = %s
+                        WHERE tmdb_id = %s;
+                    """, (media_type, title, poster_path, v_avg, release_year, overview, status, tmdb_id))
         else:
             cursor.execute("""
                 INSERT OR REPLACE INTO watchlist (user_id, tmdb_id, type, title, poster_path, vote_average, release_year, overview, status)
