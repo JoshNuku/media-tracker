@@ -284,6 +284,14 @@ def init_db():
                 );
             """)
 
+        # 7. Safe Unique Index Migrations (ensures ON CONFLICT works even on upgraded schemas)
+        try:
+            cursor.execute("CREATE UNIQUE INDEX IF NOT EXISTS watchlist_user_tmdb_uq_idx ON watchlist (user_id, tmdb_id);")
+            cursor.execute("CREATE UNIQUE INDEX IF NOT EXISTS ratings_user_tmdb_uq_idx ON ratings (user_id, tmdb_id);")
+            conn.commit()
+        except Exception as e:
+            print("[DB NOTICE] Index setup notice:", e)
+
         conn.commit()
 
         # Migrate existing watchlist.json to DB if DB watchlist for default_user is empty
@@ -511,18 +519,26 @@ def add_to_watchlist(item, user_id='default_user'):
         status = str(item.get("status", "plan_to_watch"))
 
         if db_url:
-            cursor.execute("""
-                INSERT INTO watchlist (user_id, tmdb_id, type, title, poster_path, vote_average, release_year, overview, status)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
-                ON CONFLICT (user_id, tmdb_id) DO UPDATE SET
-                    type = EXCLUDED.type,
-                    title = EXCLUDED.title,
-                    poster_path = EXCLUDED.poster_path,
-                    vote_average = EXCLUDED.vote_average,
-                    release_year = EXCLUDED.release_year,
-                    overview = EXCLUDED.overview,
-                    status = EXCLUDED.status;
-            """, (user_id, tmdb_id, media_type, title, poster_path, v_avg, release_year, overview, status))
+            try:
+                cursor.execute("""
+                    INSERT INTO watchlist (user_id, tmdb_id, type, title, poster_path, vote_average, release_year, overview, status)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    ON CONFLICT (user_id, tmdb_id) DO UPDATE SET
+                        type = EXCLUDED.type,
+                        title = EXCLUDED.title,
+                        poster_path = EXCLUDED.poster_path,
+                        vote_average = EXCLUDED.vote_average,
+                        release_year = EXCLUDED.release_year,
+                        overview = EXCLUDED.overview,
+                        status = EXCLUDED.status;
+                """, (user_id, tmdb_id, media_type, title, poster_path, v_avg, release_year, overview, status))
+            except Exception as e_conflict:
+                conn.rollback()
+                cursor.execute("DELETE FROM watchlist WHERE user_id = %s AND tmdb_id = %s;", (user_id, tmdb_id))
+                cursor.execute("""
+                    INSERT INTO watchlist (user_id, tmdb_id, type, title, poster_path, vote_average, release_year, overview, status)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s);
+                """, (user_id, tmdb_id, media_type, title, poster_path, v_avg, release_year, overview, status))
         else:
             cursor.execute("""
                 INSERT OR REPLACE INTO watchlist (user_id, tmdb_id, type, title, poster_path, vote_average, release_year, overview, status)
