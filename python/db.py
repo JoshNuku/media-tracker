@@ -646,7 +646,7 @@ def get_public_users(current_uid=None, query=None):
     try:
         conn = get_connection()
         cursor = conn.cursor()
-        sql = "SELECT uid, display_name, photo_url, ntfy_topic FROM users WHERE (is_public = 1 OR is_public = true)"
+        sql = "SELECT uid, display_name, photo_url, ntfy_topic FROM users WHERE is_public = TRUE" if db_url else "SELECT uid, display_name, photo_url, ntfy_topic FROM users WHERE (is_public = 1 OR is_public = true)"
         params = []
         if current_uid:
             sql += " AND uid != %s" if db_url else " AND uid != ?"
@@ -713,7 +713,7 @@ def manage_connection(requester_id, receiver_id, action="request"):
         cursor = conn.cursor()
         if action == "request":
             if db_url:
-                cursor.execute("INSERT INTO connections (requester_id, receiver_id, status) VALUES (%s, %s, 'accepted') ON CONFLICT DO NOTHING;", (requester_id, receiver_id))
+                cursor.execute("INSERT INTO connections (requester_id, receiver_id, status) VALUES (%s, %s, 'accepted') ON CONFLICT (requester_id, receiver_id) DO NOTHING;", (requester_id, receiver_id))
             else:
                 cursor.execute("INSERT OR REPLACE INTO connections (requester_id, receiver_id, status) VALUES (?, ?, 'accepted');", (requester_id, receiver_id))
         elif action == "remove":
@@ -735,11 +735,19 @@ def add_rating(user_id, tmdb_id, score, review=""):
         cursor = conn.cursor()
         score = float(score)
         if db_url:
-            cursor.execute("""
-                INSERT INTO ratings (user_id, tmdb_id, score, review)
-                VALUES (%s, %s, %s, %s)
-                ON CONFLICT (user_id, tmdb_id) DO UPDATE SET score = EXCLUDED.score, review = EXCLUDED.review, updated_at = CURRENT_TIMESTAMP;
-            """, (user_id, int(tmdb_id), score, review))
+            try:
+                cursor.execute("""
+                    INSERT INTO ratings (user_id, tmdb_id, score, review)
+                    VALUES (%s, %s, %s, %s)
+                    ON CONFLICT (user_id, tmdb_id) DO UPDATE SET score = EXCLUDED.score, review = EXCLUDED.review, updated_at = CURRENT_TIMESTAMP;
+                """, (user_id, int(tmdb_id), score, review))
+            except Exception:
+                conn.rollback()
+                cursor.execute("DELETE FROM ratings WHERE user_id = %s AND tmdb_id = %s;", (user_id, int(tmdb_id)))
+                cursor.execute("""
+                    INSERT INTO ratings (user_id, tmdb_id, score, review)
+                    VALUES (%s, %s, %s, %s);
+                """, (user_id, int(tmdb_id), score, review))
         else:
             cursor.execute("""
                 INSERT OR REPLACE INTO ratings (user_id, tmdb_id, score, review)
@@ -929,17 +937,19 @@ def get_user_activity(user_id):
         w_map = {}
         for row in w_rows:
             if isinstance(row, dict) or hasattr(row, 'keys'):
-                w_map[int(row["tmdb_id"])] = {
-                    "title": row["title"],
-                    "poster_path": row["poster_path"],
-                    "type": row["type"]
-                }
+                if row.get("tmdb_id") is not None:
+                    w_map[int(row["tmdb_id"])] = {
+                        "title": row["title"],
+                        "poster_path": row["poster_path"],
+                        "type": row["type"]
+                    }
             else:
-                w_map[int(row[0])] = {
-                    "title": row[1],
-                    "poster_path": row[2],
-                    "type": row[3]
-                }
+                if row[0] is not None:
+                    w_map[int(row[0])] = {
+                        "title": row[1],
+                        "poster_path": row[2],
+                        "type": row[3]
+                    }
     except Exception as e:
         print("[DB ERROR] get_user_activity lookup failed:", e)
         w_map = {}
