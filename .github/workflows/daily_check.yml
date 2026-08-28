@@ -35,4 +35,8 @@ jobs:
           NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           SEND_TEST: ${{ inputs.send_test }}
-        run: python python/checker.py
+        run: python python/checker.py || true
+
+      - name: Trigger Live Production Endpoint
+        run: |
+          curl -s "https://media-tracker-daw5.onrender.com/api/cron/check" || true

@@ -1,0 +1,16 @@
+name: VESPER Automated Cron & Release Ping
+
+on:
+  schedule:
+    # Runs every 15 minutes to keep Render app awake and trigger due reminders / release alerts
+    - cron: '*/15 * * * *'
+  workflow_dispatch: # Allows manual trigger from GitHub Actions UI
+
+jobs:
+  ping-render-cron:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping VESPER Live Production Endpoint
+        run: |
+          echo "Triggering VESPER live release check and watch reminders..."
+          curl -s -f "https://media-tracker-daw5.onrender.com/api/cron/check" || echo "Ping completed."

@@ -271,6 +271,16 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
             status = get_db_status()
             self._send_json_response(200 if status.get('connected') else 503, status)
 
+        elif path in ('/api/cron/check', '/api/cron/trigger'):
+            reminders_sent = process_pending_reminders()
+            try:
+                from checker import check_releases
+                check_releases()
+                self._send_json_response(200, {"status": "success", "message": "Release check and reminder dispatch triggered successfully.", "reminders_sent": reminders_sent})
+            except Exception as e:
+                print("[CRON ERROR]:", e)
+                self._send_json_response(500, {"status": "error", "error": str(e), "reminders_sent": reminders_sent})
+
         else:
             super().do_GET()
 
@@ -532,9 +542,36 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
         else:
             self._send_json_response(404, {"error": "Endpoint not found."})
 
+def process_pending_reminders():
+    sent_count = 0
+    try:
+        due_reminders = get_due_reminders()
+        for rem in due_reminders:
+            user = get_user(rem['user_id'])
+            if user and user.get('ntfy_topic'):
+                topic = user['ntfy_topic'].strip()
+                title = f"⏰ Time to Watch: {rem['media_title']}"
+                msg = rem['note'] if rem.get('note') else f"Your scheduled watch reminder for '{rem['media_title']}' is here! Enjoy the show."
+                mtype = rem.get('media_type', 'movie')
+                click_url = f"https://hydrahd.ws/index.php?menu=search&query={urllib.parse.quote(rem['media_title'])}"
+                send_user_ntfy(
+                    ntfy_topic=topic,
+                    title=title,
+                    message=msg,
+                    tags="alarm_clock,movie_camera",
+                    priority="high",
+                    click_url=click_url
+                )
+                sent_count += 1
+                print(f"[REMINDER SENT] Sent watch reminder to '{topic}' for {rem['media_title']}")
+            mark_reminder_sent(rem['id'])
+    except Exception as e:
+        print("[REMINDERS PROCESS ERROR]:", e)
+    return sent_count
+
 def start_release_checker_daemon():
     def _checker_loop():
-        time.sleep(10)
+        time.sleep(3)
         while True:
             try:
                 print("[DAEMON] Running scheduled VESPER release countdown check...")
@@ -546,32 +583,11 @@ def start_release_checker_daemon():
             time.sleep(6 * 3600)
 
     def _reminders_loop():
-        time.sleep(5)
+        time.sleep(2)
         while True:
-            try:
-                due_reminders = get_due_reminders()
-                for rem in due_reminders:
-                    user = get_user(rem['user_id'])
-                    if user and user.get('ntfy_topic'):
-                        topic = user['ntfy_topic'].strip()
-                        title = f"⏰ Time to Watch: {rem['media_title']}"
-                        msg = rem['note'] if rem.get('note') else f"Your scheduled watch reminder for '{rem['media_title']}' is here! Enjoy the show."
-                        mtype = rem.get('media_type', 'movie')
-                        click_url = f"https://hydrahd.com/tv/{rem['tmdb_id']}" if mtype == 'tv' else f"https://hydrahd.com/watch/{rem['tmdb_id']}"
-                        send_user_ntfy(
-                            ntfy_topic=topic,
-                            title=title,
-                            message=msg,
-                            tags="alarm_clock,movie_camera",
-                            priority="high",
-                            click_url=click_url
-                        )
-                        print(f"[REMINDER SENT] Sent watch reminder to '{topic}' for {rem['media_title']}")
-                    mark_reminder_sent(rem['id'])
-            except Exception as e:
-                print("[REMINDERS DAEMON ERROR]:", e)
-            # Check every 30 seconds
-            time.sleep(30)
+            process_pending_reminders()
+            # Check every 20 seconds
+            time.sleep(20)
 
     t1 = threading.Thread(target=_checker_loop, daemon=True)
     t1.start()
