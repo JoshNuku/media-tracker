@@ -294,6 +294,26 @@ async function sendTestPushAlert() {
   if (!topic) return alert('Please enter a valid ntfy topic first.');
   if (topicInput) topicInput.value = topic;
 
+  // 1. First attempt: Direct browser fetch to ntfy.sh (instant, bypasses any cloud IP rate-limits)
+  try {
+    const directRes = await fetch(`https://ntfy.sh/${encodeURIComponent(topic)}`, {
+      method: 'POST',
+      headers: {
+        'Title': 'VESPER Alert Test',
+        'Priority': 'high',
+        'Tags': 'tada,clapper'
+      },
+      body: 'Your ntfy push notification setup is working successfully! 🎉'
+    });
+    if (directRes.ok) {
+      alert(`🎉 Test push notification dispatched successfully!\n\nCheck your ntfy app or open https://ntfy.sh/${topic}`);
+      return;
+    }
+  } catch (directErr) {
+    console.warn('[NTFY] Direct browser dispatch failed, trying server proxy fallback...', directErr);
+  }
+
+  // 2. Second attempt: Server proxy endpoint
   try {
     const res = await fetch('/api/ntfy/test', {
       method: 'POST',
@@ -302,7 +322,7 @@ async function sendTestPushAlert() {
     });
     const data = await res.json();
     if (res.ok) {
-      alert('Test push notification dispatched! Check your ntfy app or https://ntfy.sh/' + topic);
+      alert(`🎉 Test push notification dispatched successfully!\n\nCheck your ntfy app or open https://ntfy.sh/${topic}`);
     } else {
       alert('Test push notification failed: ' + (data.error || 'Unknown error'));
     }

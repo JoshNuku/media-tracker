@@ -74,11 +74,11 @@ def clean_ntfy_topic(topic):
     t = t.strip("/").replace(" ", "-")
     return t
 
-def send_user_ntfy(ntfy_topic, title, message, tags="clapper,popcorn", priority="default", click_url=None):
+def send_user_ntfy_detailed(ntfy_topic, title, message, tags="clapper,popcorn", priority="default", click_url=None):
     clean_topic = clean_ntfy_topic(ntfy_topic)
     if not clean_topic:
         print("[NTFY WARN] Empty or invalid ntfy topic provided.")
-        return False
+        return False, "Empty or invalid ntfy topic."
     url = f"https://ntfy.sh/{clean_topic}"
     headers = {
         "Title": title,
@@ -94,7 +94,7 @@ def send_user_ntfy(ntfy_topic, title, message, tags="clapper,popcorn", priority=
         import requests
         resp = requests.post(url, data=message.encode("utf-8"), headers=headers, timeout=10)
         if resp.status_code == 200:
-            return True
+            return True, None
         else:
             print(f"[NTFY ERROR] ntfy.sh returned HTTP {resp.status_code}: {resp.text}")
     except Exception as req_err:
@@ -109,16 +109,22 @@ def send_user_ntfy(ntfy_topic, title, message, tags="clapper,popcorn", priority=
             method="POST"
         )
         with urllib.request.urlopen(req, timeout=10) as resp:
-            return resp.status == 200
+            if resp.status == 200:
+                return True, None
+            return False, f"ntfy.sh returned HTTP {resp.status}"
     except urllib.error.HTTPError as http_err:
         err_body = http_err.read().decode('utf-8', errors='replace') if hasattr(http_err, 'read') else ''
         print(f"[NTFY HTTP ERROR] Status {http_err.code}: {err_body}")
-        return False
+        return False, f"HTTP {http_err.code}: {err_body}"
     except Exception as e:
         import traceback
         print("[NTFY ERROR] Failed to send push alert:", e)
         print(traceback.format_exc())
-        return False
+        return False, str(e)
+
+def send_user_ntfy(ntfy_topic, title, message, tags="clapper,popcorn", priority="default", click_url=None):
+    success, _ = send_user_ntfy_detailed(ntfy_topic, title, message, tags=tags, priority=priority, click_url=click_url)
+    return success
 
 class CustomHandler(http.server.SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
@@ -351,11 +357,11 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
             if not topic:
                 self._send_json_response(400, {"error": "Missing ntfy_topic."})
                 return
-            sent = send_user_ntfy(topic, "VESPER Alert Test", "Your ntfy push notification setup is working successfully!", tags="tada,clapper", priority="high")
+            sent, err = send_user_ntfy_detailed(topic, "VESPER Alert Test", "Your ntfy push notification setup is working successfully!", tags="tada,clapper", priority="high")
             if sent:
                 self._send_json_response(200, {"status": "success", "message": "Test notification sent!"})
             else:
-                self._send_json_response(500, {"error": "Failed to dispatch test notification to ntfy.sh."})
+                self._send_json_response(500, {"error": f"Failed to dispatch test notification to ntfy.sh: {err or 'Unknown error'}"})
 
         elif path in ('/save-watchlist', '/api/watchlist'):
             try:
