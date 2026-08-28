@@ -70,24 +70,35 @@ def send_user_ntfy(ntfy_topic, title, message, tags="clapper,popcorn", priority=
         return False
     try:
         url = f"https://ntfy.sh/{ntfy_topic.strip()}"
-        headers = {
-            "Title": title,
-            "Priority": priority,
-            "Tags": tags,
-            "User-Agent": "MediaTracker/1.0"
-        }
-        if click_url:
-            headers["Click"] = click_url
         req = urllib.request.Request(
             url,
             data=message.encode("utf-8"),
-            headers=headers,
+            headers={
+                "Title": title,
+                "Priority": priority,
+                "Tags": tags,
+                "User-Agent": "MediaTracker/1.0"
+            },
             method="POST"
         )
-        with urllib.request.urlopen(req) as resp:
-            return resp.status == 200
+        if click_url:
+            req.add_header("Click", click_url)
+        try:
+            with urllib.request.urlopen(req) as resp:
+                if resp.status == 200:
+                    return True
+                else:
+                    body = resp.read().decode('utf-8', errors='replace')
+                    print(f"[NTFY ERROR] Unexpected response {resp.status}: {body}")
+                    return False
+        except urllib.error.HTTPError as http_err:
+            err_body = http_err.read().decode('utf-8', errors='replace') if hasattr(http_err, 'read') else ''
+            print(f"[NTFY HTTP ERROR] Status {http_err.code}: {err_body}")
+            return False
     except Exception as e:
+        import traceback
         print("[NTFY ERROR] Failed to send push alert:", e)
+        print(traceback.format_exc())
         return False
 
 class CustomHandler(http.server.SimpleHTTPRequestHandler):
