@@ -270,17 +270,29 @@ function closeNtfyModal() {
   document.getElementById('ntfyModal').style.display = 'none';
 }
 
+function sanitizeNtfyTopic(val) {
+  if (!val) return '';
+  let topic = String(val).trim();
+  if (topic.includes('ntfy.sh/')) {
+    topic = topic.split('ntfy.sh/').pop();
+  }
+  return topic.replace(/^\/+|\/+$/g, '').replace(/\s+/g, '-');
+}
+
 function updateNtfySubscribeLink(topic) {
+  const clean = sanitizeNtfyTopic(topic);
   const link = document.getElementById('ntfySubscribeLink');
-  if (link && topic) {
-    link.href = `https://ntfy.sh/${encodeURIComponent(topic)}`;
+  if (link && clean) {
+    link.href = `https://ntfy.sh/${encodeURIComponent(clean)}`;
   }
 }
 
 async function sendTestPushAlert() {
   const topicInput = document.getElementById('ntfyTopicInput');
-  const topic = topicInput ? topicInput.value.trim() : '';
-  if (!topic) return alert('Please enter a ntfy topic first.');
+  const rawTopic = topicInput ? topicInput.value.trim() : '';
+  const topic = sanitizeNtfyTopic(rawTopic);
+  if (!topic) return alert('Please enter a valid ntfy topic first.');
+  if (topicInput) topicInput.value = topic;
 
   try {
     const res = await fetch('/api/ntfy/test', {
@@ -303,7 +315,9 @@ async function saveNtfyOnboarding() {
   const topicInput = document.getElementById('ntfyTopicInput');
   const publicToggle = document.getElementById('publicProfileToggle');
 
-  const ntfy_topic = topicInput ? topicInput.value.trim() : '';
+  const rawTopic = topicInput ? topicInput.value.trim() : '';
+  const ntfy_topic = sanitizeNtfyTopic(rawTopic);
+  if (topicInput) topicInput.value = ntfy_topic;
   const is_public = publicToggle ? publicToggle.checked : true;
 
   if (currentUser) {

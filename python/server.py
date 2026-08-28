@@ -65,36 +65,55 @@ def get_tmdb_key():
 # Initialize DB on server startup
 init_db()
 
+def clean_ntfy_topic(topic):
+    if not topic:
+        return ""
+    t = str(topic).strip()
+    if "ntfy.sh/" in t:
+        t = t.split("ntfy.sh/")[-1]
+    t = t.strip("/").replace(" ", "-")
+    return t
+
 def send_user_ntfy(ntfy_topic, title, message, tags="clapper,popcorn", priority="default", click_url=None):
-    if not ntfy_topic or not ntfy_topic.strip():
+    clean_topic = clean_ntfy_topic(ntfy_topic)
+    if not clean_topic:
+        print("[NTFY WARN] Empty or invalid ntfy topic provided.")
         return False
+    url = f"https://ntfy.sh/{clean_topic}"
+    headers = {
+        "Title": title,
+        "Priority": priority,
+        "Tags": tags,
+        "User-Agent": "VESPER-MediaTracker/1.0"
+    }
+    if click_url:
+        headers["Click"] = click_url
+
+    # 1. Try with requests library
     try:
-        url = f"https://ntfy.sh/{ntfy_topic.strip()}"
+        import requests
+        resp = requests.post(url, data=message.encode("utf-8"), headers=headers, timeout=10)
+        if resp.status_code == 200:
+            return True
+        else:
+            print(f"[NTFY ERROR] ntfy.sh returned HTTP {resp.status_code}: {resp.text}")
+    except Exception as req_err:
+        print(f"[NTFY NOTICE] requests.post encountered issue ({req_err}), trying urllib fallback...")
+
+    # 2. Fallback to standard library urllib
+    try:
         req = urllib.request.Request(
             url,
             data=message.encode("utf-8"),
-            headers={
-                "Title": title,
-                "Priority": priority,
-                "Tags": tags,
-                "User-Agent": "MediaTracker/1.0"
-            },
+            headers=headers,
             method="POST"
         )
-        if click_url:
-            req.add_header("Click", click_url)
-        try:
-            with urllib.request.urlopen(req) as resp:
-                if resp.status == 200:
-                    return True
-                else:
-                    body = resp.read().decode('utf-8', errors='replace')
-                    print(f"[NTFY ERROR] Unexpected response {resp.status}: {body}")
-                    return False
-        except urllib.error.HTTPError as http_err:
-            err_body = http_err.read().decode('utf-8', errors='replace') if hasattr(http_err, 'read') else ''
-            print(f"[NTFY HTTP ERROR] Status {http_err.code}: {err_body}")
-            return False
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            return resp.status == 200
+    except urllib.error.HTTPError as http_err:
+        err_body = http_err.read().decode('utf-8', errors='replace') if hasattr(http_err, 'read') else ''
+        print(f"[NTFY HTTP ERROR] Status {http_err.code}: {err_body}")
+        return False
     except Exception as e:
         import traceback
         print("[NTFY ERROR] Failed to send push alert:", e)
