@@ -74,7 +74,7 @@ def clean_ntfy_topic(topic):
     t = t.strip("/").replace(" ", "-")
     return t
 
-def send_user_ntfy_detailed(ntfy_topic, title, message, tags="clapper,popcorn", priority="default", click_url=None):
+def send_user_ntfy_detailed(ntfy_topic, title, message, tags="clapper,popcorn", priority="urgent", click_url=None):
     clean_topic = clean_ntfy_topic(ntfy_topic)
     if not clean_topic:
         print("[NTFY WARN] Empty or invalid ntfy topic provided.")
@@ -122,7 +122,7 @@ def send_user_ntfy_detailed(ntfy_topic, title, message, tags="clapper,popcorn", 
         print(traceback.format_exc())
         return False, str(e)
 
-def send_user_ntfy(ntfy_topic, title, message, tags="clapper,popcorn", priority="default", click_url=None):
+def send_user_ntfy(ntfy_topic, title, message, tags="clapper,popcorn", priority="urgent", click_url=None):
     success, _ = send_user_ntfy_detailed(ntfy_topic, title, message, tags=tags, priority=priority, click_url=click_url)
     return success
 
@@ -357,7 +357,7 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
             if not topic:
                 self._send_json_response(400, {"error": "Missing ntfy_topic."})
                 return
-            sent, err = send_user_ntfy_detailed(topic, "VESPER Alert Test", "Your ntfy push notification setup is working successfully!", tags="tada,clapper", priority="high")
+            sent, err = send_user_ntfy_detailed(topic, "VESPER Alert Test", "Your ntfy push notification setup is working successfully!", tags="tada,clapper", priority="urgent")
             if sent:
                 self._send_json_response(200, {"status": "success", "message": "Test notification sent!"})
             else:
@@ -377,23 +377,44 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
                     
                     success = add_to_watchlist(item, user_id=user_id)
                     
-                    # Notify original owner if copied from another user's watchlist
-                    if success and copied_from_uid:
-                        try:
-                            original_user = get_user(copied_from_uid)
-                            copier_user = get_user(user_id)
-                            copier_name = copier_user.get('display_name') if copier_user else "A friend"
-                            if original_user and original_user.get('ntfy_topic'):
-                                send_user_ntfy(
-                                    original_user['ntfy_topic'],
-                                    "Watchlist Activity",
-                                    f"'{copier_name}' added '{item.get('title')}' from your watchlist into theirs!",
-                                    tags="sparkles,clapper"
-                                )
-                        except Exception as e_ntfy:
-                            print("[NOTICE] Ntfy notification skipped:", e_ntfy)
-
                     if success:
+                        item_title = item.get('title') or item.get('name') or "Title"
+                        click_url = f"https://hydrahd.ws/index.php?menu=search&query={urllib.parse.quote(str(item_title))}"
+                        
+                        # 1. Send instant push confirmation to the user who added it
+                        try:
+                            user_obj = get_user(user_id)
+                            user_topic = (user_obj.get('ntfy_topic') if user_obj else None) or f"vesper-{str(user_id)[:8]}"
+                            if user_topic:
+                                send_user_ntfy(
+                                    user_topic,
+                                    "Added to Watchlist",
+                                    f"🎬 '{item_title}' is now in your watchlist!",
+                                    tags="clapper,movie_camera",
+                                    priority="urgent",
+                                    click_url=click_url
+                                )
+                        except Exception as e_user_ntfy:
+                            print("[NOTICE] User watchlist push notification error:", e_user_ntfy)
+
+                        # 2. Notify original owner if copied from another user's watchlist
+                        if copied_from_uid:
+                            try:
+                                original_user = get_user(copied_from_uid)
+                                copier_user = get_user(user_id)
+                                copier_name = (copier_user.get('display_name') if copier_user else None) or "A friend"
+                                orig_topic = (original_user.get('ntfy_topic') if original_user else None) or f"vesper-{str(copied_from_uid)[:8]}"
+                                if orig_topic:
+                                    send_user_ntfy(
+                                        orig_topic,
+                                        "Watchlist Activity",
+                                        f"✨ '{copier_name}' added '{item_title}' from your watchlist into theirs!",
+                                        tags="sparkles,clapper",
+                                        priority="urgent"
+                                    )
+                            except Exception as e_ntfy:
+                                print("[NOTICE] Friend copy push notification error:", e_ntfy)
+
                         self._send_json_response(200, {"status": "success", "message": "Item added to watchlist."})
                     else:
                         self._send_json_response(500, {"error": "Failed to add item to watchlist."})
@@ -422,16 +443,34 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
                 return
             success = manage_connection(requester_id, receiver_id, action)
             if success and action == "request":
-                receiver = get_user(receiver_id)
-                requester = get_user(requester_id)
-                req_name = requester.get('display_name') if requester else "A user"
-                if receiver and receiver.get('ntfy_topic'):
-                    send_user_ntfy(
-                        receiver['ntfy_topic'],
-                        "New Connection Request",
-                        f"'{req_name}' connected with you on VESPER!",
-                        tags="handshake,busts_in_silhouette"
-                    )
+                try:
+                    receiver = get_user(receiver_id)
+                    requester = get_user(requester_id)
+                    req_name = (requester.get('display_name') if requester else None) or "A user"
+                    rec_name = (receiver.get('display_name') if receiver else None) or "User"
+                    rec_topic = (receiver.get('ntfy_topic') if receiver else None) or f"vesper-{str(receiver_id)[:8]}"
+                    req_topic = (requester.get('ntfy_topic') if requester else None) or f"vesper-{str(requester_id)[:8]}"
+
+                    # Alert receiver
+                    if rec_topic:
+                        send_user_ntfy(
+                            rec_topic,
+                            "New Friend Connection",
+                            f"🤝 '{req_name}' added you as a friend on VESPER!",
+                            tags="handshake,busts_in_silhouette",
+                            priority="urgent"
+                        )
+                    # Alert requester confirmation
+                    if req_topic and req_topic != rec_topic:
+                        send_user_ntfy(
+                            req_topic,
+                            "Friend Connected",
+                            f"🤝 You connected with '{rec_name}' on VESPER!",
+                            tags="handshake,clapper",
+                            priority="urgent"
+                        )
+                except Exception as e_conn:
+                    print("[NOTICE] Connection push notification error:", e_conn)
             self._send_json_response(200, {"status": "success", "message": "Connection updated."})
 
         elif path == '/api/ratings':
@@ -439,10 +478,25 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
             tmdb_id = body.get('tmdb_id')
             score = body.get('score')
             review = body.get('review', '')
+            media_title = body.get('media_title', 'Media')
             if not user_id or not tmdb_id or score is None:
                 self._send_json_response(400, {"error": "Missing user_id, tmdb_id, or score."})
                 return
             success = add_rating(user_id, tmdb_id, score, review)
+            if success:
+                try:
+                    user_obj = get_user(user_id)
+                    user_topic = (user_obj.get('ntfy_topic') if user_obj else None) or f"vesper-{str(user_id)[:8]}"
+                    if user_topic:
+                        send_user_ntfy(
+                            user_topic,
+                            "Rating Saved",
+                            f"⭐ Rated '{media_title}': {score}/5 stars",
+                            tags="star,clapper",
+                            priority="urgent"
+                        )
+                except Exception as e_r:
+                    print("[NOTICE] Rating push notification error:", e_r)
             self._send_json_response(200, {"status": "success" if success else "error"})
 
         elif path == '/api/comments':
@@ -457,28 +511,35 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
                 return
             success = add_comment(user_id, tmdb_id, content, target_user_id=target_user_id, parent_id=parent_id)
             if success:
-                commenter = get_user(user_id)
-                c_name = commenter.get('display_name') if commenter else "Someone"
-                if parent_id:
-                    parent_comm = get_comment(parent_id)
-                    if parent_comm and parent_comm.get('user_id') != user_id:
-                        parent_user = get_user(parent_comm['user_id'])
-                        if parent_user and parent_user.get('ntfy_topic'):
+                try:
+                    commenter = get_user(user_id)
+                    c_name = commenter.get('display_name') if commenter else "Someone"
+                    if parent_id:
+                        parent_comm = get_comment(parent_id)
+                        if parent_comm and parent_comm.get('user_id') != user_id:
+                            parent_user = get_user(parent_comm['user_id'])
+                            parent_topic = (parent_user.get('ntfy_topic') if parent_user else None) or f"vesper-{str(parent_comm['user_id'])[:8]}"
+                            if parent_topic:
+                                send_user_ntfy(
+                                    parent_topic,
+                                    f"New Reply from {c_name}",
+                                    f"{c_name} replied: \"{content[:60]}\"",
+                                    tags="speech_balloon,clapper",
+                                    priority="urgent"
+                                )
+                    elif target_user_id and target_user_id != user_id:
+                        target_user = get_user(target_user_id)
+                        target_topic = (target_user.get('ntfy_topic') if target_user else None) or f"vesper-{str(target_user_id)[:8]}"
+                        if target_topic:
                             send_user_ntfy(
-                                parent_user['ntfy_topic'],
-                                f"New Reply from {c_name}",
-                                f"{c_name} replied: \"{content[:60]}\"",
-                                tags="speech_balloon,clapper"
+                                target_topic,
+                                f"New Comment from {c_name}",
+                                f"{c_name} commented on {media_title}: \"{content[:60]}\"",
+                                tags="speech_balloon,clapper",
+                                priority="urgent"
                             )
-                elif target_user_id and target_user_id != user_id:
-                    target_user = get_user(target_user_id)
-                    if target_user and target_user.get('ntfy_topic'):
-                        send_user_ntfy(
-                            target_user['ntfy_topic'],
-                            f"New Comment from {c_name}",
-                            f"{c_name} commented on {media_title}: \"{content[:60]}\"",
-                            tags="speech_balloon,clapper"
-                        )
+                except Exception as e_comm:
+                    print("[NOTICE] Comment push notification error:", e_comm)
             self._send_json_response(200, {"status": "success" if success else "error"})
 
         elif path == '/api/ratings/delete':
@@ -514,6 +575,19 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
 
             res = add_custom_reminder(user_id, tmdb_id, media_title, media_type, poster_path, remind_at, note)
             if res:
+                try:
+                    user_obj = get_user(user_id)
+                    user_topic = (user_obj.get('ntfy_topic') if user_obj else None) or f"vesper-{str(user_id)[:8]}"
+                    if user_topic:
+                        send_user_ntfy(
+                            user_topic,
+                            "Watch Reminder Scheduled",
+                            f"⏰ Reminder set for '{media_title}' at {remind_at}",
+                            tags="alarm_clock,clapper",
+                            priority="urgent"
+                        )
+                except Exception as e_rem:
+                    print("[NOTICE] Reminder creation push notification error:", e_rem)
                 self._send_json_response(200, res)
             else:
                 self._send_json_response(500, {"error": "Failed to create reminder."})
@@ -595,7 +669,7 @@ def process_pending_reminders():
                     title=title,
                     message=msg,
                     tags="alarm_clock,movie_camera",
-                    priority="high",
+                    priority="urgent",
                     click_url=click_url
                 )
                 sent_count += 1

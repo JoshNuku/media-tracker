@@ -300,7 +300,7 @@ async function sendTestPushAlert() {
       method: 'POST',
       headers: {
         'Title': 'VESPER Alert Test',
-        'Priority': 'high',
+        'Priority': 'urgent',
         'Tags': 'tada,clapper'
       },
       body: 'Your ntfy push notification setup is working successfully! 🎉'
@@ -912,6 +912,37 @@ async function addItem(item, copiedFromUid = null) {
 
   watchlist.push(newItem);
   renderWatchlist();
+
+  // Direct client push dispatch for instant notification to user
+  if (currentUser && currentUser.ntfy_topic) {
+    try {
+      fetch(`https://ntfy.sh/${encodeURIComponent(sanitizeNtfyTopic(currentUser.ntfy_topic))}`, {
+        method: 'POST',
+        headers: {
+          'Title': 'Added to Watchlist',
+          'Priority': 'urgent',
+          'Tags': 'clapper,movie_camera'
+        },
+        body: `🎬 '${newItem.title}' is now in your watchlist!`
+      }).catch(() => {});
+    } catch (_) {}
+  }
+
+  // Direct client push dispatch to friend if copied from friend's watchlist
+  if (copiedFromUid) {
+    try {
+      const friendTopic = `vesper-${String(copiedFromUid).substring(0, 8)}`;
+      fetch(`https://ntfy.sh/${encodeURIComponent(sanitizeNtfyTopic(friendTopic))}`, {
+        method: 'POST',
+        headers: {
+          'Title': 'Watchlist Activity',
+          'Priority': 'urgent',
+          'Tags': 'sparkles,clapper'
+        },
+        body: `✨ '${currentUser ? (currentUser.display_name || 'A friend') : 'A friend'}' added '${newItem.title}' from your watchlist into theirs!`
+      }).catch(() => {});
+    } catch (_) {}
+  }
 
   try {
     await fetch('/api/watchlist', {
@@ -2244,7 +2275,7 @@ async function searchPublicUsers() {
           </div>
           <div class="user-card-actions">
             <button class="g-btn g-btn-secondary" onclick="viewFriendWishlist('${u.uid}', '${escapeHtml(u.display_name)}')">View Watchlist</button>
-            <button class="g-btn" onclick="connectUser('${u.uid}')">Connect</button>
+            <button class="g-btn" onclick="connectUser('${u.uid}', '${escapeHtml(u.ntfy_topic || '')}')">Connect</button>
           </div>
         </div>
       `;
@@ -2293,8 +2324,23 @@ function toggleSidebarAccordion(accordionId) {
   }
 }
 
-async function connectUser(receiverUid) {
+async function connectUser(receiverUid, receiverTopic = null) {
   if (!requireAuth("Please sign in with Google to connect with users.")) return;
+
+  // Direct client push dispatch to guarantee instant arrival on friend's device
+  const targetTopic = receiverTopic || `vesper-${String(receiverUid).substring(0, 8)}`;
+  try {
+    fetch(`https://ntfy.sh/${encodeURIComponent(sanitizeNtfyTopic(targetTopic))}`, {
+      method: 'POST',
+      headers: {
+        'Title': 'New Friend Connection',
+        'Priority': 'urgent',
+        'Tags': 'handshake,busts_in_silhouette'
+      },
+      body: `🤝 '${currentUser.display_name || 'A user'}' added you as a friend on VESPER!`
+    }).catch(() => {});
+  } catch (_) {}
+
   try {
     const res = await fetch('/api/connections', {
       method: 'POST',

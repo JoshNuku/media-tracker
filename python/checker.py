@@ -19,7 +19,7 @@ SEND_TEST = os.getenv("SEND_TEST", "").lower() in ("true", "1", "yes") or "--tes
 # Ensure DB is initialized
 init_db()
 
-def send_push_notification(title: str, message_body: str, topic: str = DEFAULT_NTFY_TOPIC, priority: str = "high", tags: str = "clapper,tv"):
+def send_push_notification(title: str, message_body: str, topic: str = DEFAULT_NTFY_TOPIC, priority: str = "urgent", tags: str = "clapper,tv"):
     if not topic:
         topic = DEFAULT_NTFY_TOPIC
     url = f"https://ntfy.sh/{topic}"
@@ -63,7 +63,7 @@ def process_release_alert(title: str, release_format: str, release_date_str: str
             title,
             f"🎉 RELEASE DAY: '{title}' ({release_format}) is officially out today ({release_date_str})!",
             topic=topic,
-            priority="high",
+            priority="urgent",
             tags="tada,clapper"
         )
     elif days == 1:
@@ -71,7 +71,7 @@ def process_release_alert(title: str, release_format: str, release_date_str: str
             title,
             f"⏰ RELEASING TOMORROW: '{title}' ({release_format}) releases tomorrow ({release_date_str})!",
             topic=topic,
-            priority="high",
+            priority="urgent",
             tags="alarm_clock,clapper"
         )
     elif days == 3:
@@ -79,7 +79,7 @@ def process_release_alert(title: str, release_format: str, release_date_str: str
             title,
             f"📅 3 DAYS LEFT: '{title}' ({release_format}) releases in 3 days ({release_date_str})!",
             topic=topic,
-            priority="default",
+            priority="urgent",
             tags="calendar,clapper"
         )
     elif days == 7:
@@ -87,7 +87,7 @@ def process_release_alert(title: str, release_format: str, release_date_str: str
             title,
             f"🗓️ 7 DAYS AWAY: '{title}' ({release_format}) releases in 1 week on {release_date_str}!",
             topic=topic,
-            priority="default",
+            priority="urgent",
             tags="calendar,clapper"
         )
     else:
@@ -180,7 +180,8 @@ def check_releases():
         send_push_notification(
             "VESPER Setup",
             f"Test Notification: Your VESPER ntfy setup and countdown alerts are working! 🎉 (Date: {today})",
-            topic=DEFAULT_NTFY_TOPIC
+            topic=DEFAULT_NTFY_TOPIC,
+            priority="urgent"
         )
 
     total_sent = 0
