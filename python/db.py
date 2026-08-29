@@ -158,7 +158,7 @@ def init_db():
                 );
             """)
 
-        # Safe Column migrations for existing watchlist tables without aborting transactions
+        # Safe Column and Primary Key migrations for existing watchlist tables
         try:
             if db_url:
                 cursor.execute("SELECT column_name FROM information_schema.columns WHERE table_name = 'watchlist' AND column_name = 'user_id';")
@@ -168,15 +168,83 @@ def init_db():
                 cursor.execute("SELECT column_name FROM information_schema.columns WHERE table_name = 'watchlist' AND column_name = 'status';")
                 if not cursor.fetchone():
                     cursor.execute("ALTER TABLE watchlist ADD COLUMN status VARCHAR(20) DEFAULT 'plan_to_watch';")
+
+                cursor.execute("UPDATE watchlist SET user_id = 'default_user' WHERE user_id IS NULL;")
+
+                # Ensure primary key is composite (user_id, tmdb_id)
+                try:
+                    cursor.execute("""
+                        SELECT c.conname, array_agg(a.attname::text)
+                        FROM pg_constraint c
+                        JOIN pg_class t ON c.conrelid = t.oid
+                        JOIN pg_namespace n ON t.relnamespace = n.oid
+                        JOIN pg_attribute a ON a.attrelid = t.oid AND a.attnum = ANY(c.conkey)
+                        WHERE t.relname = 'watchlist' AND c.contype = 'p'
+                        GROUP BY c.conname;
+                    """)
+                    pk_info = cursor.fetchone()
+                    if pk_info:
+                        pk_name, pk_cols = pk_info[0], pk_info[1]
+                        if set(pk_cols) != {'user_id', 'tmdb_id'}:
+                            cursor.execute(f"ALTER TABLE watchlist DROP CONSTRAINT {pk_name} CASCADE;")
+                            cursor.execute("ALTER TABLE watchlist ALTER COLUMN user_id SET NOT NULL;")
+                            cursor.execute("ALTER TABLE watchlist ALTER COLUMN tmdb_id SET NOT NULL;")
+                            cursor.execute("ALTER TABLE watchlist ADD PRIMARY KEY (user_id, tmdb_id);")
+                    else:
+                        cursor.execute("ALTER TABLE watchlist ALTER COLUMN user_id SET NOT NULL;")
+                        cursor.execute("ALTER TABLE watchlist ALTER COLUMN tmdb_id SET NOT NULL;")
+                        cursor.execute("ALTER TABLE watchlist ADD PRIMARY KEY (user_id, tmdb_id);")
+                except Exception as e_pg_pk:
+                    print("[DB NOTICE] Postgres primary key update:", e_pg_pk)
+
+                try:
+                    cursor.execute("ALTER TABLE watchlist DROP CONSTRAINT IF EXISTS watchlist_tmdb_id_key CASCADE;")
+                except Exception:
+                    pass
             else:
                 cursor.execute("PRAGMA table_info(watchlist);")
-                cols = [row[1] for row in cursor.fetchall()]
-                if 'user_id' not in cols:
-                    cursor.execute("ALTER TABLE watchlist ADD COLUMN user_id TEXT DEFAULT 'default_user';")
-                if 'status' not in cols:
-                    cursor.execute("ALTER TABLE watchlist ADD COLUMN status TEXT DEFAULT 'plan_to_watch';")
+                cols_info = cursor.fetchall()
+                # cols_info: (cid, name, type, notnull, dflt_value, pk)
+                col_names = [c[1] for c in cols_info]
+                pk_cols = [c[1] for c in cols_info if c[5] > 0]
+                
+                # Check if user_id is missing or if primary key is not composite (user_id, tmdb_id)
+                if 'user_id' not in col_names or set(pk_cols) != {'user_id', 'tmdb_id'}:
+                    print("[DB MIGRATION] Migrating SQLite watchlist table to composite PRIMARY KEY (user_id, tmdb_id)...")
+                    cursor.execute("""
+                        CREATE TABLE watchlist_migration_temp (
+                            user_id TEXT DEFAULT 'default_user',
+                            tmdb_id INTEGER NOT NULL,
+                            type TEXT NOT NULL,
+                            title TEXT NOT NULL,
+                            poster_path TEXT,
+                            vote_average REAL,
+                            release_year TEXT,
+                            overview TEXT,
+                            status TEXT DEFAULT 'plan_to_watch',
+                            added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                            PRIMARY KEY (user_id, tmdb_id)
+                        );
+                    """)
+                    
+                    has_uid = 'user_id' in col_names
+                    has_status = 'status' in col_names
+                    has_added_at = 'added_at' in col_names
+                    
+                    uid_expr = "COALESCE(user_id, 'default_user')" if has_uid else "'default_user'"
+                    status_expr = "COALESCE(status, 'plan_to_watch')" if has_status else "'plan_to_watch'"
+                    added_at_expr = "COALESCE(added_at, CURRENT_TIMESTAMP)" if has_added_at else "CURRENT_TIMESTAMP"
+                    
+                    cursor.execute(f"""
+                        INSERT OR IGNORE INTO watchlist_migration_temp (user_id, tmdb_id, type, title, poster_path, vote_average, release_year, overview, status, added_at)
+                        SELECT {uid_expr}, tmdb_id, type, title, poster_path, vote_average, release_year, overview, {status_expr}, {added_at_expr}
+                        FROM watchlist;
+                    """)
+                    cursor.execute("DROP TABLE watchlist;")
+                    cursor.execute("ALTER TABLE watchlist_migration_temp RENAME TO watchlist;")
+                    print("[DB MIGRATION] SQLite watchlist table migration completed successfully.")
         except Exception as e:
-            print("[DB NOTICE] Watchlist column migration check:", e)
+            print("[DB NOTICE] Watchlist migration check:", e)
 
         # 3. Connections table
         if db_url:
@@ -519,26 +587,18 @@ def add_to_watchlist(item, user_id='default_user'):
         status = str(item.get("status", "plan_to_watch"))
 
         if db_url:
-            try:
-                cursor.execute("DELETE FROM watchlist WHERE tmdb_id = %s AND user_id = %s;", (tmdb_id, user_id))
-                cursor.execute("""
-                    INSERT INTO watchlist (user_id, tmdb_id, type, title, poster_path, vote_average, release_year, overview, status)
-                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s);
-                """, (user_id, tmdb_id, media_type, title, poster_path, v_avg, release_year, overview, status))
-            except Exception as e_ins:
-                conn.rollback()
-                try:
-                    cursor.execute("DELETE FROM watchlist WHERE tmdb_id = %s;", (tmdb_id,))
-                    cursor.execute("""
-                        INSERT INTO watchlist (user_id, tmdb_id, type, title, poster_path, vote_average, release_year, overview, status)
-                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s);
-                    """, (user_id, tmdb_id, media_type, title, poster_path, v_avg, release_year, overview, status))
-                except Exception as e_ins2:
-                    conn.rollback()
-                    cursor.execute("""
-                        UPDATE watchlist SET type = %s, title = %s, poster_path = %s, vote_average = %s, release_year = %s, overview = %s, status = %s
-                        WHERE tmdb_id = %s;
-                    """, (media_type, title, poster_path, v_avg, release_year, overview, status, tmdb_id))
+            cursor.execute("""
+                INSERT INTO watchlist (user_id, tmdb_id, type, title, poster_path, vote_average, release_year, overview, status)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+                ON CONFLICT (user_id, tmdb_id) DO UPDATE SET
+                    type = EXCLUDED.type,
+                    title = EXCLUDED.title,
+                    poster_path = EXCLUDED.poster_path,
+                    vote_average = EXCLUDED.vote_average,
+                    release_year = EXCLUDED.release_year,
+                    overview = EXCLUDED.overview,
+                    status = EXCLUDED.status;
+            """, (user_id, tmdb_id, media_type, title, poster_path, v_avg, release_year, overview, status))
         else:
             cursor.execute("""
                 INSERT OR REPLACE INTO watchlist (user_id, tmdb_id, type, title, poster_path, vote_average, release_year, overview, status)
