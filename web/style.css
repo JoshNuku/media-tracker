@@ -1659,6 +1659,484 @@ input:focus {
   accent-color: var(--g-blue);
 }
 
+/* ==========================================================================
+   Multi-Step Guided Onboarding Wizard Styles
+   ========================================================================== */
+.onboarding-modal-card {
+  max-width: 540px !important;
+}
+
+.onboarding-steps-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 1rem 1.5rem 0.5rem 1.5rem;
+  border-bottom: 1px solid var(--g-border);
+  background: var(--g-bg);
+}
+
+.onboarding-step-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.35rem 0.85rem;
+  border-radius: 20px;
+  background: var(--g-surface);
+  border: 1px solid var(--g-border);
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--g-subtext);
+  transition: all 0.25s ease;
+}
+
+.onboarding-step-pill .step-num {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.onboarding-step-pill.active {
+  background: rgba(66, 133, 244, 0.12);
+  border-color: rgba(66, 133, 244, 0.5);
+  color: var(--g-blue);
+}
+
+.onboarding-step-pill.active .step-num {
+  background: var(--g-blue);
+  color: #fff;
+}
+
+.onboarding-step-pill.completed {
+  background: rgba(52, 168, 83, 0.12);
+  border-color: rgba(52, 168, 83, 0.4);
+  color: #34A853;
+}
+
+.step-connector {
+  width: 20px;
+  height: 2px;
+  background: var(--g-border);
+  border-radius: 1px;
+}
+
+.onboarding-step-content {
+  animation: fadeInStep 0.25s ease forwards;
+}
+
+@keyframes fadeInStep {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Step 1: Hero card */
+.onboarding-hero-card {
+  display: flex;
+  align-items: center;
+  gap: 1.1rem;
+  padding: 1rem 1.25rem;
+  background: linear-gradient(135deg, rgba(66, 133, 244, 0.1) 0%, rgba(139, 92, 246, 0.08) 100%);
+  border: 1px solid rgba(66, 133, 244, 0.25);
+  border-radius: 18px;
+  margin-bottom: 1.15rem;
+}
+
+.onboarding-avatar-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.onboarding-user-avatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: 2px solid var(--g-blue);
+  background: var(--g-surface);
+  object-fit: cover;
+}
+
+.onboarding-avatar-badge {
+  position: absolute;
+  bottom: -4px;
+  right: -4px;
+  font-size: 1rem;
+  background: var(--g-surface);
+  border-radius: 50%;
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+}
+
+.onboarding-hero-text h3 {
+  margin: 0 0 0.25rem 0;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--g-text);
+}
+
+.onboarding-hero-text p {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--g-subtext);
+  line-height: 1.4;
+}
+
+.onboarding-features-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 1.15rem;
+}
+
+.onboarding-feature-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.85rem;
+  padding: 0.75rem 0.95rem;
+  background: var(--g-bg);
+  border: 1px solid var(--g-border);
+  border-radius: 14px;
+}
+
+.onboard-feat-icon {
+  font-size: 1.35rem;
+  flex-shrink: 0;
+  line-height: 1;
+  margin-top: 2px;
+}
+
+.onboarding-feature-item strong {
+  display: block;
+  font-size: 0.9rem;
+  color: var(--g-text);
+  margin-bottom: 0.15rem;
+}
+
+.onboarding-feature-item p {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--g-subtext);
+  line-height: 1.35;
+}
+
+.onboarding-privacy-box {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  padding: 0.85rem 1rem;
+  background: var(--g-bg);
+  border: 1px solid var(--g-border);
+  border-radius: 14px;
+}
+
+.switch-control {
+  position: relative;
+  display: inline-block;
+  width: 44px;
+  height: 24px;
+  flex-shrink: 0;
+}
+
+.switch-control input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.switch-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-color: var(--g-border);
+  transition: .3s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 24px;
+}
+
+.switch-slider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: .3s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 50%;
+}
+
+.switch-control input:checked + .switch-slider {
+  background-color: var(--g-blue);
+}
+
+.switch-control input:checked + .switch-slider:before {
+  transform: translateX(20px);
+}
+
+.switch-label-wrap strong {
+  display: block;
+  font-size: 0.875rem;
+  color: var(--g-text);
+  margin-bottom: 0.15rem;
+}
+
+.switch-label-wrap p {
+  margin: 0;
+  font-size: 0.775rem;
+  color: var(--g-subtext);
+  line-height: 1.3;
+}
+
+/* Step 2: Push notification & QR code */
+.onboarding-step-head {
+  margin-bottom: 1.1rem;
+}
+
+.onboarding-step-head h3 {
+  margin: 0 0 0.3rem 0;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--g-text);
+}
+
+.onboarding-step-head p {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--g-subtext);
+  line-height: 1.4;
+}
+
+.onboarding-qr-container {
+  display: flex;
+  gap: 1.15rem;
+  background: var(--g-bg);
+  border: 1px solid var(--g-border);
+  border-radius: 16px;
+  padding: 1.15rem;
+  margin-bottom: 1rem;
+  align-items: center;
+}
+
+.onboarding-qr-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  flex-shrink: 0;
+  background: #fff;
+  padding: 0.5rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.onboard-qr-img {
+  width: 120px;
+  height: 120px;
+  display: block;
+  border-radius: 6px;
+}
+
+.onboard-qr-caption {
+  font-size: 0.68rem;
+  color: #555;
+  margin-top: 0.35rem;
+  max-width: 120px;
+  line-height: 1.25;
+  font-weight: 500;
+}
+
+.onboarding-qr-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  flex: 1;
+}
+
+.onboard-action-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.onboard-app-links {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-top: 0.2rem;
+}
+
+.app-links-label {
+  font-size: 0.75rem;
+  color: var(--g-subtext);
+  font-weight: 600;
+}
+
+.app-links-row {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.app-mini-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: var(--g-surface);
+  border: 1px solid var(--g-border);
+  color: var(--g-text);
+  padding: 0.35rem 0.75rem;
+  border-radius: 8px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.18s ease;
+}
+
+.app-mini-btn:hover {
+  background: var(--g-surface-hover);
+  border-color: var(--g-subtext);
+  transform: translateY(-1px);
+}
+
+.onboarding-test-box {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  background: var(--g-bg);
+  border: 1px solid var(--g-border);
+  border-radius: 12px;
+  margin-bottom: 0.85rem;
+}
+
+.onboard-test-status {
+  font-size: 0.825rem;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.onboard-test-status.success {
+  color: #34A853;
+}
+
+.onboard-test-status.error {
+  color: var(--g-red);
+}
+
+.onboarding-topic-details {
+  font-size: 0.825rem;
+  color: var(--g-subtext);
+  cursor: pointer;
+  padding: 0.4rem 0.2rem;
+}
+
+.onboarding-topic-details summary {
+  font-weight: 600;
+  color: var(--g-blue);
+  outline: none;
+}
+
+/* Step 3: Quick Start cards */
+.onboard-quick-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.quick-card {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.15rem;
+  background: var(--g-bg);
+  border: 1px solid var(--g-border);
+  border-radius: 16px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.quick-card:hover {
+  background: var(--g-surface-hover);
+  border-color: rgba(66, 133, 244, 0.5);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+}
+
+.quick-card-icon {
+  font-size: 1.6rem;
+  flex-shrink: 0;
+}
+
+.quick-card-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  flex: 1;
+}
+
+.quick-card-info strong {
+  font-size: 0.95rem;
+  color: var(--g-text);
+}
+
+.quick-card-info span {
+  font-size: 0.8rem;
+  color: var(--g-subtext);
+  line-height: 1.35;
+}
+
+.quick-card-arrow {
+  font-size: 1.2rem;
+  color: var(--g-blue);
+  transition: transform 0.2s ease;
+}
+
+.quick-card:hover .quick-card-arrow {
+  transform: translateX(4px);
+}
+
+.g-btn-subtle {
+  background: transparent !important;
+  border: none !important;
+  color: var(--g-subtext) !important;
+  font-size: 0.85rem !important;
+  cursor: pointer !important;
+  padding: 0.5rem 0.85rem !important;
+  border-radius: 8px !important;
+  transition: color 0.18s ease, background 0.18s ease !important;
+}
+
+.g-btn-subtle:hover {
+  color: var(--g-text) !important;
+  background: var(--g-bg) !important;
+}
+
+@media (max-width: 600px) {
+  .onboarding-qr-container {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .onboarding-qr-box {
+    align-self: center;
+  }
+  .onboarding-steps-header {
+    padding: 0.75rem 1rem 0.4rem 1rem;
+    gap: 0.35rem;
+  }
+  .onboarding-step-pill {
+    padding: 0.25rem 0.6rem;
+    font-size: 0.75rem;
+  }
+}
+
 /* About VESPER Modal Styles */
 .about-modal-card {
   max-width: 580px;

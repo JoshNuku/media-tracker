@@ -221,16 +221,24 @@
 
         <!-- Watchlist & Activity Filter Pills -->
         <div class="discover-pills-row" style="margin-bottom: 1.5rem;">
-          <button class="discover-pill active" id="pill-watch-all" onclick="filterWatchlistView('all')">All
-            Titles</button>
-          <button class="discover-pill" id="pill-watch-movie" onclick="filterWatchlistView('movie')">🎬 Movies</button>
-          <button class="discover-pill" id="pill-watch-tv" onclick="filterWatchlistView('tv')">📺 TV Shows</button>
-          <button class="discover-pill" id="pill-watch-reminders" onclick="filterWatchlistView('reminders')">⏰ Reminders
-            (<span id="userRemindersCount">0</span>)</button>
-          <button class="discover-pill" id="pill-watch-rated" onclick="filterWatchlistView('rated')">⭐ My Ratings (<span
-              id="userRatingsCount">0</span>)</button>
-          <button class="discover-pill" id="pill-watch-commented" onclick="filterWatchlistView('commented')">My
-            Comments (<span id="userCommentsCount">0</span>)</button>
+          <button class="discover-pill active" id="pill-watch-all" onclick="filterWatchlistView('all')">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:4px;"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>All Titles
+          </button>
+          <button class="discover-pill" id="pill-watch-movie" onclick="filterWatchlistView('movie')">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:4px;"><rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"/><line x1="7" y1="2" x2="7" y2="22"/><line x1="17" y1="2" x2="17" y2="22"/><line x1="2" y1="12" x2="22" y2="12"/><line x1="2" y1="7" x2="7" y2="7"/><line x1="2" y1="17" x2="7" y2="17"/><line x1="17" y1="17" x2="22" y2="17"/><line x1="17" y1="7" x2="22" y2="7"/></svg>Movies
+          </button>
+          <button class="discover-pill" id="pill-watch-tv" onclick="filterWatchlistView('tv')">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:4px;"><rect x="2" y="7" width="20" height="15" rx="2" ry="2"/><polyline points="17 2 12 7 7 2"/></svg>TV Shows
+          </button>
+          <button class="discover-pill" id="pill-watch-reminders" onclick="filterWatchlistView('reminders')">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:4px;"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Reminders (<span id="userRemindersCount">0</span>)
+          </button>
+          <button class="discover-pill" id="pill-watch-rated" onclick="filterWatchlistView('rated')">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:4px;"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>My Ratings (<span id="userRatingsCount">0</span>)
+          </button>
+          <button class="discover-pill" id="pill-watch-commented" onclick="filterWatchlistView('commented')">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:4px;"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>My Comments (<span id="userCommentsCount">0</span>)
+          </button>
         </div>
 
         <div id="watchlist" class="media-grid"></div>
@@ -251,16 +259,26 @@
 
           <!-- Discover Filter Pills -->
           <div class="discover-pills-row">
-            <button class="discover-pill active" id="pill-trending" onclick="loadDiscoverCategory('trending')">🔥
-              Trending</button>
-            <button class="discover-pill" id="pill-popular_movies" onclick="loadDiscoverCategory('popular_movies')">🎬
-              Popular Movies</button>
-            <button class="discover-pill" id="pill-popular_tv" onclick="loadDiscoverCategory('popular_tv')">📺 Popular
-              TV</button>
-            <button class="discover-pill" id="pill-upcoming" onclick="loadDiscoverCategory('upcoming')">⏳ Upcoming
-              Releases</button>
-            <button class="discover-pill" id="pill-now_playing" onclick="loadDiscoverCategory('now_playing')">🍿 In
-              Theaters</button>
+            <button class="discover-pill active" id="pill-trending" onclick="loadDiscoverCategory('trending')">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>
+              Trending
+            </button>
+            <button class="discover-pill" id="pill-popular_movies" onclick="loadDiscoverCategory('popular_movies')">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"/><line x1="7" y1="2" x2="7" y2="22"/><line x1="17" y1="2" x2="17" y2="22"/><line x1="2" y1="12" x2="22" y2="12"/><line x1="2" y1="7" x2="7" y2="7"/><line x1="2" y1="17" x2="7" y2="17"/><line x1="17" y1="17" x2="22" y2="17"/><line x1="17" y1="7" x2="22" y2="7"/></svg>
+              Popular Movies
+            </button>
+            <button class="discover-pill" id="pill-popular_tv" onclick="loadDiscoverCategory('popular_tv')">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="15" rx="2" ry="2"/><polyline points="17 2 12 7 7 2"/></svg>
+              Popular TV
+            </button>
+            <button class="discover-pill" id="pill-upcoming" onclick="loadDiscoverCategory('upcoming')">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              Upcoming Releases
+            </button>
+            <button class="discover-pill" id="pill-now_playing" onclick="loadDiscoverCategory('now_playing')">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              In Theaters
+            </button>
           </div>
         </div>
 
@@ -538,9 +556,28 @@
 
   <!-- ntfy Push Notification & Profile Settings Modal -->
   <div id="ntfyModal" class="modal-overlay" style="display: none;">
-    <div class="modal-card">
+    <div class="modal-card onboarding-modal-card">
       <div class="modal-sheet-handle"></div>
-      <div class="modal-header">
+
+      <!-- Wizard Step Indicator (Only during Onboarding) -->
+      <div id="onboardingStepIndicator" class="onboarding-steps-header" style="display:none;">
+        <div class="onboarding-step-pill active" id="stepPill1">
+          <span class="step-num">1</span>
+          <span class="step-label">Welcome</span>
+        </div>
+        <div class="step-connector"></div>
+        <div class="onboarding-step-pill" id="stepPill2">
+          <span class="step-num">2</span>
+          <span class="step-label">Alerts</span>
+        </div>
+        <div class="step-connector"></div>
+        <div class="onboarding-step-pill" id="stepPill3">
+          <span class="step-num">3</span>
+          <span class="step-label">Explore</span>
+        </div>
+      </div>
+
+      <div class="modal-header" id="modalHeaderStandard">
         <h2 id="ntfyModalTitle">Account & Settings</h2>
         <button class="modal-close-btn" onclick="closeNtfyModal()"><svg width="18" height="18" viewBox="0 0 24 24"
             fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -548,85 +585,309 @@
             <line x1="6" y1="6" x2="18" y2="18" />
           </svg></button>
       </div>
+
       <div class="modal-body">
 
-        <!-- User Profile Header Card in Modal Sheet -->
-        <div id="modalUserProfileCard" class="profile-sheet-card">
-          <img id="modalProfileAvatar" class="profile-sheet-avatar"
-            src="https://api.dicebear.com/7.x/avataaars/svg?seed=user" alt="Avatar" referrerpolicy="no-referrer">
-          <div class="profile-sheet-info">
-            <div id="modalProfileName" class="profile-sheet-name">User Name</div>
-            <div id="modalProfileEmail" class="profile-sheet-email">user@email.com</div>
+        <!-- ================= ONBOARDING WIZARD VIEW ================= -->
+        <div id="onboardingWizardView" style="display: none;">
+
+          <!-- STEP 1: Welcome & Value -->
+          <div id="onboardStep1" class="onboarding-step-content active">
+            <div class="onboarding-hero-card">
+              <div class="onboarding-avatar-wrap">
+                <img id="onboardUserAvatar" class="onboarding-user-avatar" src="https://api.dicebear.com/7.x/avataaars/svg?seed=user" alt="Avatar">
+                <span class="onboarding-avatar-badge">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                </span>
+              </div>
+              <div class="onboarding-hero-text">
+                <h3 id="onboardGreeting">Welcome to VESPER!</h3>
+                <p>Your sleek, personalized movie and series countdown companion.</p>
+              </div>
+            </div>
+
+            <div class="onboarding-features-list">
+              <div class="onboarding-feature-item">
+                <div class="onboard-feat-icon">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+                </div>
+                <div>
+                  <strong>Track Your Watchlist</strong>
+                  <p>Save movies & TV shows across all streaming platforms and theaters in one click.</p>
+                </div>
+              </div>
+              <div class="onboarding-feature-item">
+                <div class="onboard-feat-icon">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                </div>
+                <div>
+                  <strong>Release Countdown Alerts</strong>
+                  <p>Get notified 7 days, 3 days, 1 day, and on premiere day when titles drop.</p>
+                </div>
+              </div>
+              <div class="onboarding-feature-item">
+                <div class="onboard-feat-icon">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                </div>
+                <div>
+                  <strong>Social & Friends</strong>
+                  <p>Follow friends, share watchlists, write star reviews, and join discussions.</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="onboarding-privacy-box">
+              <label class="switch-control">
+                <input type="checkbox" id="onboardPublicToggle" checked>
+                <span class="switch-slider"></span>
+              </label>
+              <div class="switch-label-wrap">
+                <strong>Public Watchlist & Profile</strong>
+                <p>Allows friends to discover your reviews and view your watchlist (recommended).</p>
+              </div>
+            </div>
           </div>
-          <button class="btn-sm-action" onclick="logoutFirebase(); closeNtfyModal();"
-            style="margin-left:auto; color:var(--g-red); border-color:rgba(239, 68, 68, 0.3);">Sign Out</button>
+
+          <!-- STEP 2: Notifications Setup (Frictionless + QR Code + 1-Tap) -->
+          <div id="onboardStep2" class="onboarding-step-content" style="display: none;">
+            <div class="onboarding-step-head">
+              <h3 style="display:flex; align-items:center; gap:0.5rem;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+                Stay Notified Before Releases
+              </h3>
+              <p>Optional & 100% free push alerts powered by <strong>ntfy.sh</strong>. No spam, no signup required.</p>
+            </div>
+
+            <div class="onboarding-qr-container">
+              <div class="onboarding-qr-box">
+                <img id="onboardQrImage" src="https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=https://ntfy.sh/vesper&margin=6" alt="QR Code" class="onboard-qr-img">
+                <div class="onboard-qr-caption">Scan with phone camera to subscribe</div>
+              </div>
+
+              <div class="onboarding-qr-actions">
+                <div class="onboard-action-row">
+                  <a id="onboardSubscribeBtn" href="https://ntfy.sh" target="_blank" rel="noopener" class="g-btn g-btn-primary g-btn-full" style="text-decoration:none;">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                    1-Tap Open on ntfy.sh
+                  </a>
+                  <button type="button" class="g-btn g-btn-secondary g-btn-full" onclick="copyNtfyLink()">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                    <span id="copyLinkBtnText">Copy Topic Link</span>
+                  </button>
+                </div>
+
+                <div class="onboard-app-links">
+                  <span class="app-links-label">Get the free app (optional):</span>
+                  <div class="app-links-row">
+                    <a href="https://apps.apple.com/us/app/ntfy/id1625396347" target="_blank" rel="noopener" class="app-mini-btn">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 6.36c.68-.83 1.15-1.99.99-3.16-1 .04-2.21.67-2.9 1.48-.62.72-1.16 1.89-.98 3.03 1.12.09 2.26-.57 2.89-1.35z"/></svg>
+                      iOS App
+                    </a>
+                    <a href="https://play.google.com/store/apps/details?id=io.heckel.ntfy" target="_blank" rel="noopener" class="app-mini-btn">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M3.6 2.25c-.23.25-.35.61-.35 1.07v17.36c0 .46.12.82.35 1.07l.06.05 9.72-9.72v-.22L3.66 2.2l-.06.05zm13.16 6.36l-3.21 3.21 3.21 3.21 3.65-2.07c1.04-.59 1.04-1.56 0-2.15l-3.65-2.2zm-3.21 3.21L3.83 2.09c.32-.14.71-.14 1.14.1l11.75 6.68-3.17 2.95zm0 0l3.17 2.95-11.75 6.68c-.43.24-.82.24-1.14.1l9.72-9.73z"/></svg>
+                      Android App
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Test Alert Row -->
+            <div class="onboarding-test-box">
+              <button type="button" class="g-btn g-btn-secondary" id="onboardTestBtn" onclick="sendTestPushAlert(true)">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+                Send Test Alert
+              </button>
+              <span id="onboardTestStatus" class="onboard-test-status"></span>
+            </div>
+
+            <!-- Optional topic customization drawer -->
+            <details class="onboarding-topic-details">
+              <summary>Customize Topic Name (Optional)</summary>
+              <div class="form-group" style="margin-top:0.6rem;">
+                <input type="text" id="ntfyTopicInput" placeholder="e.g. vesper-user-1234">
+                <small>Auto-generated uniquely for your account.</small>
+              </div>
+            </details>
+          </div>
+
+          <!-- STEP 3: Quick Start / Explore -->
+          <div id="onboardStep3" class="onboarding-step-content" style="display: none;">
+            <div class="onboarding-step-head" style="text-align: center;">
+              <div style="margin-bottom: 0.65rem; display: flex; justify-content: center;">
+                <div style="width: 52px; height: 52px; border-radius: 50%; background: rgba(66, 133, 244, 0.12); border: 2px solid var(--g-blue); display: flex; align-items: center; justify-content: center; color: var(--g-blue);">
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                </div>
+              </div>
+              <h3>You're All Set!</h3>
+              <p>Your cinema dashboard is ready. Pick an action to get started:</p>
+            </div>
+
+            <div class="onboard-quick-cards">
+              <div class="quick-card" onclick="finishOnboarding('search')">
+                <div class="quick-card-icon">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>
+                </div>
+                <div class="quick-card-info">
+                  <strong>Browse Trending Titles</strong>
+                  <span>Discover box-office movies & streaming hits</span>
+                </div>
+                <span class="quick-card-arrow">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+                </span>
+              </div>
+
+              <div class="quick-card" onclick="finishOnboarding('watchlist')">
+                <div class="quick-card-icon">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"/><line x1="7" y1="2" x2="7" y2="22"/><line x1="17" y1="2" x2="17" y2="22"/><line x1="2" y1="12" x2="22" y2="12"/><line x1="2" y1="7" x2="7" y2="7"/><line x1="2" y1="17" x2="7" y2="17"/><line x1="17" y1="17" x2="22" y2="17"/><line x1="17" y1="7" x2="22" y2="7"/></svg>
+                </div>
+                <div class="quick-card-info">
+                  <strong>My Watchlist</strong>
+                  <span>Start tracking movies with 1-click free HydraHD streaming</span>
+                </div>
+                <span class="quick-card-arrow">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+                </span>
+              </div>
+
+              <div class="quick-card" onclick="finishOnboarding('social')">
+                <div class="quick-card-icon">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                </div>
+                <div class="quick-card-info">
+                  <strong>Connect with Friends</strong>
+                  <span>Follow friends, view their lists & write reviews</span>
+                </div>
+                <span class="quick-card-arrow">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+                </span>
+              </div>
+            </div>
+          </div>
+
         </div>
 
-        <!-- Step 1: Download Mobile App -->
-        <div class="ntfy-download-banner">
-          <div class="download-banner-title">Step 1: Download the Free ntfy App</div>
-          <p class="download-banner-desc">Get instant push notifications on your phone when movies release or friends
-            connect.</p>
-          <div class="app-download-buttons">
-            <a href="https://play.google.com/store/apps/details?id=io.heckel.ntfy" target="_blank" rel="noopener"
-              class="app-store-btn">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-                <path
-                  d="M3.6 2.25c-.23.25-.35.61-.35 1.07v17.36c0 .46.12.82.35 1.07l.06.05 9.72-9.72v-.22L3.66 2.2l-.06.05zm13.16 6.36l-3.21 3.21 3.21 3.21 3.65-2.07c1.04-.59 1.04-1.56 0-2.15l-3.65-2.2zm-3.21 3.21L3.83 2.09c.32-.14.71-.14 1.14.1l11.75 6.68-3.17 2.95zm0 0l3.17 2.95-11.75 6.68c-.43.24-.82.24-1.14.1l9.72-9.73z" />
-              </svg>
-              Google Play Store
+        <!-- ================= STANDARD ACCOUNT & SETTINGS VIEW (EDIT MODE) ================= -->
+        <div id="accountSettingsView">
+          <!-- User Profile Header Card in Modal Sheet -->
+          <div id="modalUserProfileCard" class="profile-sheet-card">
+            <img id="modalProfileAvatar" class="profile-sheet-avatar"
+              src="https://api.dicebear.com/7.x/avataaars/svg?seed=user" alt="Avatar" referrerpolicy="no-referrer">
+            <div class="profile-sheet-info">
+              <div id="modalProfileName" class="profile-sheet-name">User Name</div>
+              <div id="modalProfileEmail" class="profile-sheet-email">user@email.com</div>
+            </div>
+            <button class="btn-sm-action" onclick="logoutFirebase(); closeNtfyModal();"
+              style="margin-left:auto; color:var(--g-red); border-color:rgba(239, 68, 68, 0.3);">Sign Out</button>
+          </div>
+
+          <!-- Push Alerts Banner -->
+          <div class="ntfy-download-banner">
+            <div class="download-banner-title">Mobile Push Alerts (ntfy)</div>
+            <p class="download-banner-desc">Get instant push notifications on your phone when movies release or friends connect.</p>
+            <div class="app-download-buttons">
+              <a href="https://play.google.com/store/apps/details?id=io.heckel.ntfy" target="_blank" rel="noopener"
+                class="app-store-btn">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                  <path
+                    d="M3.6 2.25c-.23.25-.35.61-.35 1.07v17.36c0 .46.12.82.35 1.07l.06.05 9.72-9.72v-.22L3.66 2.2l-.06.05zm13.16 6.36l-3.21 3.21 3.21 3.21 3.65-2.07c1.04-.59 1.04-1.56 0-2.15l-3.65-2.2zm-3.21 3.21L3.83 2.09c.32-.14.71-.14 1.14.1l11.75 6.68-3.17 2.95zm0 0l3.17 2.95-11.75 6.68c-.43.24-.82.24-1.14.1l9.72-9.73z" />
+                </svg>
+                Google Play
+              </a>
+              <a href="https://apps.apple.com/us/app/ntfy/id1625396347" target="_blank" rel="noopener"
+                class="app-store-btn">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                  <path
+                    d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 6.36c.68-.83 1.15-1.99.99-3.16-1 .04-2.21.67-2.9 1.48-.62.72-1.16 1.89-.98 3.03 1.12.09 2.26-.57 2.89-1.35z" />
+                </svg>
+                App Store
+              </a>
+            </div>
+          </div>
+
+          <!-- Topic Subscription -->
+          <div class="form-group" style="margin-top:0.4rem;">
+            <label for="settingsNtfyTopicInput">Your Unique ntfy Topic</label>
+            <input type="text" id="settingsNtfyTopicInput" placeholder="e.g. vesper-user-1234">
+          </div>
+
+          <div class="ntfy-action-box">
+            <a id="ntfySubscribeLink" href="https://ntfy.sh" target="_blank" rel="noopener" class="g-btn g-btn-secondary"
+              style="text-decoration:none;">
+              Open 1-Tap Subscribe on ntfy.sh
             </a>
-            <a href="https://apps.apple.com/us/app/ntfy/id1625396347" target="_blank" rel="noopener"
-              class="app-store-btn">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-                <path
-                  d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 6.36c.68-.83 1.15-1.99.99-3.16-1 .04-2.21.67-2.9 1.48-.62.72-1.16 1.89-.98 3.03 1.12.09 2.26-.57 2.89-1.35z" />
-              </svg>
-              Apple App Store
-            </a>
+            <button class="g-btn g-btn-secondary" onclick="sendTestPushAlert(false)">
+              Send Test Push Notification
+            </button>
+          </div>
+
+          <div class="notification-schedule-info" style="margin-top: 1rem; background: var(--g-bg); border: 1px solid var(--g-border); border-radius: 12px; padding: 0.85rem 1rem; display: flex; align-items: flex-start; gap: 0.75rem;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--g-text); flex-shrink: 0; margin-top: 2px;">
+              <circle cx="12" cy="12" r="10"/>
+              <polyline points="12 6 12 12 16 14"/>
+            </svg>
+            <div style="font-size: 0.825rem; color: var(--g-subtext); line-height: 1.45;">
+              <strong style="color: var(--g-text); display: block; margin-bottom: 2px;">Release Alert Schedule (8:00 AM – 10:00 AM)</strong>
+              Automated release reminders (7, 3, 1-day & premiere day drops) for titles in your watchlist are dispatched daily between 8:00 AM – 10:00 AM.
+            </div>
+          </div>
+
+          <hr class="modal-divider">
+
+          <div class="form-group-checkbox">
+            <input type="checkbox" id="publicProfileToggle" checked>
+            <label for="publicProfileToggle">Make my profile & watchlist public to other users</label>
           </div>
         </div>
 
-        <!-- Step 2: Topic Subscription -->
-        <div class="download-banner-title" style="margin-top:1.25rem;">Step 2: Subscribe to Your Topic</div>
-        <div class="form-group" style="margin-top:0.4rem;">
-          <label for="ntfyTopicInput">Your Unique ntfy Topic</label>
-          <input type="text" id="ntfyTopicInput" placeholder="e.g. vesper-user-1234">
-        </div>
+      </div>
 
-        <div class="ntfy-action-box">
-          <a id="ntfySubscribeLink" href="https://ntfy.sh" target="_blank" rel="noopener" class="g-btn g-btn-secondary"
-            style="text-decoration:none;">
-            Open 1-Tap Subscribe on ntfy.sh
-          </a>
-          <button class="g-btn g-btn-secondary" onclick="sendTestPushAlert()">
-            Send Test Push Notification
-          </button>
-        </div>
-
-        <div class="notification-schedule-info" style="margin-top: 1rem; background: var(--g-bg); border: 1px solid var(--g-border); border-radius: 12px; padding: 0.85rem 1rem; display: flex; align-items: flex-start; gap: 0.75rem;">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--g-text); flex-shrink: 0; margin-top: 2px;">
-            <circle cx="12" cy="12" r="10"/>
-            <polyline points="12 6 12 12 16 14"/>
-          </svg>
-          <div style="font-size: 0.825rem; color: var(--g-subtext); line-height: 1.45;">
-            <strong style="color: var(--g-text); display: block; margin-bottom: 2px;">Release Alert Schedule (8:00 AM – 10:00 AM)</strong>
-            Automated release reminders (7, 3, 1-day & premiere day drops) for titles in your watchlist are dispatched daily between 8:00 AM – 10:00 AM.
+      <!-- Footer for Onboarding Wizard vs Edit Mode -->
+      <div class="modal-footer" id="onboardingFooter" style="display: none;">
+        <div id="onboardFooterNav" style="display:flex; width:100%; justify-content:space-between; align-items:center;">
+          <!-- Step 1 Nav -->
+          <div id="onboardNavStep1" style="display:flex; width:100%; justify-content:space-between; align-items:center;">
+            <button type="button" class="g-btn g-btn-subtle" onclick="skipOnboarding()">Skip for Now</button>
+            <button type="button" class="g-btn" onclick="goToOnboardingStep(2)">
+              Next: Release Alerts
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-left:4px;"><polyline points="9 18 15 12 9 6"/></svg>
+            </button>
           </div>
-        </div>
-
-        <hr class="modal-divider">
-
-        <div class="form-group-checkbox">
-          <input type="checkbox" id="publicProfileToggle" checked>
-          <label for="publicProfileToggle">Make my profile & watchlist public to other users</label>
+          <!-- Step 2 Nav -->
+          <div id="onboardNavStep2" style="display:none; width:100%; justify-content:space-between; align-items:center;">
+            <button type="button" class="g-btn g-btn-secondary" onclick="goToOnboardingStep(1)">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right:4px;"><polyline points="15 18 9 12 15 6"/></svg>
+              Back
+            </button>
+            <div style="display:flex; gap:0.5rem;">
+              <button type="button" class="g-btn g-btn-subtle" onclick="goToOnboardingStep(3)">Skip</button>
+              <button type="button" class="g-btn" onclick="goToOnboardingStep(3)">
+                Next: Explore
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-left:4px;"><polyline points="9 18 15 12 9 6"/></svg>
+              </button>
+            </div>
+          </div>
+          <!-- Step 3 Nav -->
+          <div id="onboardNavStep3" style="display:none; width:100%; justify-content:space-between; align-items:center;">
+            <button type="button" class="g-btn g-btn-secondary" onclick="goToOnboardingStep(2)">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right:4px;"><polyline points="15 18 9 12 15 6"/></svg>
+              Back
+            </button>
+            <button type="button" class="g-btn g-btn-primary" onclick="finishOnboarding('watchlist')">
+              Launch Dashboard
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-left:4px;"><polyline points="9 18 15 12 9 6"/></svg>
+            </button>
+          </div>
         </div>
       </div>
-      <div class="modal-footer"
+
+      <!-- Standard Settings Footer -->
+      <div class="modal-footer" id="settingsFooter"
         style="display: flex; gap: 0.5rem; justify-content: space-between; align-items: center;">
         <button class="g-btn g-btn-secondary" onclick="closeNtfyModal(); openAboutModal();">About VESPER</button>
-        <button class="g-btn" onclick="saveNtfyOnboarding()">Save Settings</button>
+        <button class="g-btn" onclick="saveNtfySettings()">Save Settings</button>
       </div>
+
     </div>
   </div>
 
@@ -739,14 +1000,18 @@
             style="font-weight:600; font-size:0.8rem; color:var(--g-subtext); margin-bottom:0.4rem; display:block;">Quick
             Presets</label>
           <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.5rem;">
-            <button type="button" class="preset-time-btn" onclick="setReminderPreset('tonight')">🌙 Tonight (8
-              PM)</button>
-            <button type="button" class="preset-time-btn" onclick="setReminderPreset('tomorrow')">☀️ Tomorrow (8
-              PM)</button>
-            <button type="button" class="preset-time-btn" onclick="setReminderPreset('friday')">🍿 Friday (8
-              PM)</button>
-            <button type="button" class="preset-time-btn" onclick="setReminderPreset('saturday')">🎬 Saturday (8
-              PM)</button>
+            <button type="button" class="preset-time-btn" onclick="setReminderPreset('tonight')">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:4px;"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>Tonight (8 PM)
+            </button>
+            <button type="button" class="preset-time-btn" onclick="setReminderPreset('tomorrow')">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:4px;"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>Tomorrow (8 PM)
+            </button>
+            <button type="button" class="preset-time-btn" onclick="setReminderPreset('friday')">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:4px;"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>Friday (8 PM)
+            </button>
+            <button type="button" class="preset-time-btn" onclick="setReminderPreset('saturday')">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:4px;"><rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"/><line x1="7" y1="2" x2="7" y2="22"/><line x1="17" y1="2" x2="17" y2="22"/><line x1="2" y1="12" x2="22" y2="12"/><line x1="2" y1="7" x2="7" y2="7"/><line x1="2" y1="17" x2="7" y2="17"/><line x1="17" y1="17" x2="22" y2="17"/><line x1="17" y1="7" x2="22" y2="7"/></svg>Saturday (8 PM)
+            </button>
           </div>
         </div>
 
@@ -768,7 +1033,7 @@
           <span style="font-size:0.8rem; color:var(--g-subtext);">Sync to calendar:</span>
           <button type="button" class="activity-pill-btn" onclick="openGoogleCalendarReminder()"
             style="font-size:0.775rem;">
-            📅 Add to Google Calendar
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:4px;"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Add to Google Calendar
           </button>
         </div>
       </div>

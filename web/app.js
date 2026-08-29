@@ -225,49 +225,262 @@ function closeAboutModal() {
   if (modal) modal.style.display = 'none';
 }
 
+let currentOnboardingStep = 1;
+
 function openNtfyModal(isEdit = false) {
   const modal = document.getElementById('ntfyModal');
-  const topicInput = document.getElementById('ntfyTopicInput');
-  const publicToggle = document.getElementById('publicProfileToggle');
+  const stepIndicator = document.getElementById('onboardingStepIndicator');
+  const wizardView = document.getElementById('onboardingWizardView');
+  const settingsView = document.getElementById('accountSettingsView');
+  const onboardingFooter = document.getElementById('onboardingFooter');
+  const settingsFooter = document.getElementById('settingsFooter');
   const modalTitle = document.getElementById('ntfyModalTitle');
-  const modalAvatar = document.getElementById('modalProfileAvatar');
-  const modalName = document.getElementById('modalProfileName');
-  const modalEmail = document.getElementById('modalProfileEmail');
 
-  if (currentUser) {
-    if (modalAvatar) {
-      modalAvatar.src = currentUser.photo_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(currentUser.uid || 'user')}`;
-    }
-    if (modalName) modalName.innerText = currentUser.display_name || 'VESPER Member';
-    if (modalEmail) modalEmail.innerText = currentUser.email || '';
-  }
-
-  if (modalTitle) {
-    modalTitle.innerText = isEdit ? 'Account & Settings' : 'Onboarding: Set Up Push Alerts';
-  }
-
+  // Common user defaults
   let defaultTopic = currentUser ? (currentUser.ntfy_topic || `vesper-${currentUser.uid.substring(0,8)}`) : 'vesper-cinema-updates';
   if (defaultTopic.startsWith('mediatracker-')) {
     defaultTopic = defaultTopic.replace('mediatracker-', 'vesper-');
     if (currentUser) currentUser.ntfy_topic = defaultTopic;
   }
-  
-  if (topicInput) topicInput.value = defaultTopic;
-  if (publicToggle && currentUser) publicToggle.checked = currentUser.is_public !== false;
 
-  updateNtfySubscribeLink(defaultTopic);
+  const cleanTopic = sanitizeNtfyTopic(defaultTopic);
+  const avatarUrl = currentUser ? (currentUser.photo_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(currentUser.uid || 'user')}`) : 'https://api.dicebear.com/7.x/avataaars/svg?seed=user';
+  const firstName = currentUser && currentUser.display_name ? currentUser.display_name.trim().split(' ')[0] : 'there';
 
-  if (topicInput) {
-    topicInput.oninput = () => {
-      updateNtfySubscribeLink(topicInput.value.trim());
-    };
+  if (!isEdit) {
+    // --- ONBOARDING WIZARD MODE ---
+    if (modalTitle) modalTitle.innerText = 'Welcome to VESPER';
+    if (stepIndicator) stepIndicator.style.display = 'flex';
+    if (wizardView) wizardView.style.display = 'block';
+    if (settingsView) settingsView.style.display = 'none';
+    if (onboardingFooter) onboardingFooter.style.display = 'flex';
+    if (settingsFooter) settingsFooter.style.display = 'none';
+
+    // Step 1 Profile info
+    const onboardAvatar = document.getElementById('onboardUserAvatar');
+    const onboardGreeting = document.getElementById('onboardGreeting');
+    const onboardPublicToggle = document.getElementById('onboardPublicToggle');
+    if (onboardAvatar) onboardAvatar.src = avatarUrl;
+    if (onboardGreeting) onboardGreeting.innerText = `Welcome, ${firstName}!`;
+    if (onboardPublicToggle && currentUser) onboardPublicToggle.checked = currentUser.is_public !== false;
+
+    // Step 2 Setup info
+    const topicInput = document.getElementById('ntfyTopicInput');
+    if (topicInput) {
+      topicInput.value = cleanTopic;
+      topicInput.oninput = () => {
+        const t = sanitizeNtfyTopic(topicInput.value);
+        updateNtfyQRCode(t);
+      };
+    }
+    updateNtfyQRCode(cleanTopic);
+
+    goToOnboardingStep(1);
+
+  } else {
+    // --- STANDARD SETTINGS MODE ---
+    if (modalTitle) modalTitle.innerText = 'Account & Settings';
+    if (stepIndicator) stepIndicator.style.display = 'none';
+    if (wizardView) wizardView.style.display = 'none';
+    if (settingsView) settingsView.style.display = 'block';
+    if (onboardingFooter) onboardingFooter.style.display = 'none';
+    if (settingsFooter) settingsFooter.style.display = 'flex';
+
+    // Update profile card elements
+    const modalAvatar = document.getElementById('modalProfileAvatar');
+    const modalName = document.getElementById('modalProfileName');
+    const modalEmail = document.getElementById('modalProfileEmail');
+    const publicToggle = document.getElementById('publicProfileToggle');
+    const settingsTopicInput = document.getElementById('settingsNtfyTopicInput');
+
+    if (modalAvatar) modalAvatar.src = avatarUrl;
+    if (modalName) modalName.innerText = (currentUser ? currentUser.display_name : null) || 'VESPER Member';
+    if (modalEmail) modalEmail.innerText = (currentUser ? currentUser.email : null) || '';
+    if (publicToggle && currentUser) publicToggle.checked = currentUser.is_public !== false;
+    if (settingsTopicInput) {
+      settingsTopicInput.value = cleanTopic;
+      settingsTopicInput.oninput = () => {
+        updateNtfySubscribeLink(settingsTopicInput.value.trim());
+      };
+    }
+    updateNtfySubscribeLink(cleanTopic);
   }
 
   if (modal) modal.style.display = 'flex';
 }
 
 function closeNtfyModal() {
-  document.getElementById('ntfyModal').style.display = 'none';
+  const modal = document.getElementById('ntfyModal');
+  if (modal) modal.style.display = 'none';
+}
+
+function goToOnboardingStep(stepNum) {
+  currentOnboardingStep = stepNum;
+
+  // Step views
+  const step1 = document.getElementById('onboardStep1');
+  const step2 = document.getElementById('onboardStep2');
+  const step3 = document.getElementById('onboardStep3');
+
+  if (step1) step1.style.display = (stepNum === 1) ? 'block' : 'none';
+  if (step2) step2.style.display = (stepNum === 2) ? 'block' : 'none';
+  if (step3) step3.style.display = (stepNum === 3) ? 'block' : 'none';
+
+  // Step indicators
+  const p1 = document.getElementById('stepPill1');
+  const p2 = document.getElementById('stepPill2');
+  const p3 = document.getElementById('stepPill3');
+
+  if (p1 && p2 && p3) {
+    p1.className = 'onboarding-step-pill' + (stepNum === 1 ? ' active' : (stepNum > 1 ? ' completed' : ''));
+    p2.className = 'onboarding-step-pill' + (stepNum === 2 ? ' active' : (stepNum > 2 ? ' completed' : ''));
+    p3.className = 'onboarding-step-pill' + (stepNum === 3 ? ' active' : '');
+  }
+
+  // Footer nav
+  const nav1 = document.getElementById('onboardNavStep1');
+  const nav2 = document.getElementById('onboardNavStep2');
+  const nav3 = document.getElementById('onboardNavStep3');
+
+  if (nav1) nav1.style.display = (stepNum === 1) ? 'flex' : 'none';
+  if (nav2) nav2.style.display = (stepNum === 2) ? 'flex' : 'none';
+  if (nav3) nav3.style.display = (stepNum === 3) ? 'flex' : 'none';
+
+  // Update QR code if on step 2
+  if (stepNum === 2) {
+    const topicInput = document.getElementById('ntfyTopicInput');
+    const topic = sanitizeNtfyTopic(topicInput ? topicInput.value : '');
+    updateNtfyQRCode(topic || (currentUser ? `vesper-${currentUser.uid.substring(0,8)}` : 'vesper'));
+  }
+}
+
+function updateNtfyQRCode(topic) {
+  const clean = sanitizeNtfyTopic(topic) || 'vesper';
+  const qrImg = document.getElementById('onboardQrImage');
+  const subscribeBtn = document.getElementById('onboardSubscribeBtn');
+  const ntfyUrl = `https://ntfy.sh/${encodeURIComponent(clean)}`;
+
+  if (qrImg) {
+    qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=${encodeURIComponent(ntfyUrl)}&margin=6`;
+  }
+  if (subscribeBtn) {
+    subscribeBtn.href = ntfyUrl;
+  }
+}
+
+function copyNtfyLink() {
+  const topicInput = document.getElementById('ntfyTopicInput');
+  const topic = sanitizeNtfyTopic(topicInput ? topicInput.value : '') || (currentUser ? `vesper-${currentUser.uid.substring(0,8)}` : 'vesper');
+  const url = `https://ntfy.sh/${topic}`;
+
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(url).then(() => {
+      showCopyLinkFeedback();
+    }).catch(() => {
+      prompt("Copy your topic link below:", url);
+    });
+  } else {
+    prompt("Copy your topic link below:", url);
+  }
+}
+
+function showCopyLinkFeedback() {
+  const btnText = document.getElementById('copyLinkBtnText');
+  if (btnText) {
+    const original = btnText.innerText;
+    btnText.innerText = 'Copied Link!';
+    setTimeout(() => {
+      btnText.innerText = original;
+    }, 2500);
+  }
+}
+
+async function skipOnboarding() {
+  if (currentUser) {
+    try {
+      const res = await fetch('/api/user/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          uid: currentUser.uid,
+          onboarded: true
+        })
+      });
+      if (res.ok) {
+        currentUser = await res.json();
+        localStorage.setItem('vesper_current_user', JSON.stringify(currentUser));
+      }
+    } catch (e) {
+      console.warn("Could not save skip state:", e);
+    }
+  }
+  closeNtfyModal();
+  enterAppDirectly('watchlist');
+}
+
+async function finishOnboarding(preferredTab = 'watchlist') {
+  const topicInput = document.getElementById('ntfyTopicInput');
+  const publicToggle = document.getElementById('onboardPublicToggle');
+
+  const rawTopic = topicInput ? topicInput.value.trim() : '';
+  const ntfy_topic = sanitizeNtfyTopic(rawTopic) || (currentUser ? `vesper-${currentUser.uid.substring(0,8)}` : 'vesper-cinema-updates');
+  const is_public = publicToggle ? publicToggle.checked : true;
+
+  if (currentUser) {
+    try {
+      const res = await fetch('/api/user/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          uid: currentUser.uid,
+          ntfy_topic: ntfy_topic,
+          is_public: is_public,
+          onboarded: true
+        })
+      });
+      if (res.ok) {
+        currentUser = await res.json();
+        localStorage.setItem('vesper_current_user', JSON.stringify(currentUser));
+      }
+    } catch (e) {
+      console.error("Error saving onboarding settings:", e);
+    }
+  }
+  closeNtfyModal();
+  enterAppDirectly(preferredTab);
+}
+
+async function saveNtfySettings() {
+  const topicInput = document.getElementById('settingsNtfyTopicInput');
+  const publicToggle = document.getElementById('publicProfileToggle');
+
+  const rawTopic = topicInput ? topicInput.value.trim() : '';
+  const ntfy_topic = sanitizeNtfyTopic(rawTopic) || (currentUser ? `vesper-${currentUser.uid.substring(0,8)}` : 'vesper-cinema-updates');
+  const is_public = publicToggle ? publicToggle.checked : true;
+
+  if (currentUser) {
+    try {
+      const res = await fetch('/api/user/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          uid: currentUser.uid,
+          ntfy_topic: ntfy_topic,
+          is_public: is_public,
+          onboarded: true
+        })
+      });
+      if (res.ok) {
+        currentUser = await res.json();
+        localStorage.setItem('vesper_current_user', JSON.stringify(currentUser));
+        alert('Settings saved successfully!');
+      }
+    } catch (e) {
+      console.error(e);
+      alert('Failed to save settings: ' + e.message);
+    }
+  }
+  closeNtfyModal();
 }
 
 function sanitizeNtfyTopic(val) {
@@ -287,14 +500,25 @@ function updateNtfySubscribeLink(topic) {
   }
 }
 
-async function sendTestPushAlert() {
-  const topicInput = document.getElementById('ntfyTopicInput');
+async function sendTestPushAlert(isOnboarding = false) {
+  const inputId = isOnboarding ? 'ntfyTopicInput' : 'settingsNtfyTopicInput';
+  const topicInput = document.getElementById(inputId);
   const rawTopic = topicInput ? topicInput.value.trim() : '';
-  const topic = sanitizeNtfyTopic(rawTopic);
-  if (!topic) return alert('Please enter a valid ntfy topic first.');
+  const topic = sanitizeNtfyTopic(rawTopic) || (currentUser ? `vesper-${currentUser.uid.substring(0,8)}` : 'vesper-cinema-updates');
   if (topicInput) topicInput.value = topic;
 
-  // 1. First attempt: Direct browser fetch to ntfy.sh (instant, bypasses any cloud IP rate-limits)
+  const statusEl = isOnboarding ? document.getElementById('onboardTestStatus') : null;
+  const testBtn = isOnboarding ? document.getElementById('onboardTestBtn') : null;
+
+  if (statusEl) {
+    statusEl.className = 'onboard-test-status';
+    statusEl.innerText = 'Dispatching test alert...';
+  }
+  if (testBtn) testBtn.disabled = true;
+
+  let delivered = false;
+
+  // 1. Direct browser fetch to ntfy.sh
   try {
     const directRes = await fetch(`https://ntfy.sh/${encodeURIComponent(topic)}`, {
       method: 'POST',
@@ -306,60 +530,45 @@ async function sendTestPushAlert() {
       body: 'Your ntfy push notification setup is working successfully! 🎉'
     });
     if (directRes.ok) {
-      alert(`🎉 Test push notification dispatched successfully!\n\nCheck your ntfy app or open https://ntfy.sh/${topic}`);
-      return;
+      delivered = true;
     }
   } catch (directErr) {
-    console.warn('[NTFY] Direct browser dispatch failed, trying server proxy fallback...', directErr);
+    console.warn('[NTFY] Direct browser dispatch failed, trying backend proxy...', directErr);
   }
 
-  // 2. Second attempt: Server proxy endpoint
-  try {
-    const res = await fetch('/api/ntfy/test', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ntfy_topic: topic })
-    });
-    const data = await res.json();
-    if (res.ok) {
-      alert(`🎉 Test push notification dispatched successfully!\n\nCheck your ntfy app or open https://ntfy.sh/${topic}`);
-    } else {
-      alert('Test push notification failed: ' + (data.error || 'Unknown error'));
-    }
-  } catch (e) {
-    alert('Error sending test notification: ' + e.message);
-  }
-}
-
-async function saveNtfyOnboarding() {
-  const topicInput = document.getElementById('ntfyTopicInput');
-  const publicToggle = document.getElementById('publicProfileToggle');
-
-  const rawTopic = topicInput ? topicInput.value.trim() : '';
-  const ntfy_topic = sanitizeNtfyTopic(rawTopic);
-  if (topicInput) topicInput.value = ntfy_topic;
-  const is_public = publicToggle ? publicToggle.checked : true;
-
-  if (currentUser) {
+  // 2. Fallback to server proxy
+  if (!delivered) {
     try {
-      const res = await fetch('/api/user/settings', {
+      const res = await fetch('/api/ntfy/test', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          uid: currentUser.uid,
-          ntfy_topic: ntfy_topic,
-          is_public: is_public,
-          onboarded: true
-        })
+        body: JSON.stringify({ ntfy_topic: topic })
       });
       if (res.ok) {
-        currentUser = await res.json();
+        delivered = true;
       }
     } catch (e) {
       console.error(e);
     }
   }
-  closeNtfyModal();
+
+  if (testBtn) testBtn.disabled = false;
+
+  if (delivered) {
+    if (statusEl) {
+      statusEl.className = 'onboard-test-status success';
+      statusEl.innerText = '✅ Delivered! Check your ntfy app.';
+    } else {
+      alert(`🎉 Test push notification dispatched successfully!\n\nCheck your ntfy app or visit https://ntfy.sh/${topic}`);
+    }
+  } else {
+    if (statusEl) {
+      statusEl.className = 'onboard-test-status error';
+      statusEl.innerText = '⚠️ Could not reach ntfy.sh. Check topic.';
+    } else {
+      alert('Test push notification could not be delivered. Please verify topic.');
+    }
+  }
 }
 
 /* ==========================================================================
@@ -1012,11 +1221,11 @@ async function loadDiscoverCategory(category = 'trending') {
   if (searchInput) searchInput.value = '';
 
   const titles = {
-    'trending': '🔥 Trending This Week',
-    'popular_movies': '🎬 Popular Movies',
-    'popular_tv': '📺 Popular TV Series',
-    'upcoming': '⏳ Upcoming Releases',
-    'now_playing': '🍿 Now In Theaters'
+    'trending': 'Trending This Week',
+    'popular_movies': 'Popular Movies',
+    'popular_tv': 'Popular TV Series',
+    'upcoming': 'Upcoming Releases',
+    'now_playing': 'Now In Theaters'
   };
 
   if (sectionTitle) {
@@ -1492,7 +1701,9 @@ async function renderDetailsPage(details, id, mediaType) {
     <div class="details-reminder-card">
       <div style="display:flex; align-items:center; justify-content:space-between; gap:0.75rem; flex-wrap:wrap;">
         <div style="display:flex; align-items:center; gap:0.75rem; min-width:220px;">
-          <div class="details-reminder-icon">⏰</div>
+          <div class="details-reminder-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          </div>
           <div>
             <div style="font-weight:700; font-size:0.95rem; color:var(--g-text);">
               Scheduled Watch Time: <span style="color:var(--g-blue);">${escapeHtml(formattedReminderTime)}</span>
@@ -1502,10 +1713,12 @@ async function renderDetailsPage(details, id, mediaType) {
         </div>
         <div style="display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap;">
           <button class="activity-pill-btn" onclick="openGoogleCalendarReminderDirect('${escapedTitle}', ${id}, '${existingReminder.remind_at}', '${escapeHtml((existingReminder.note || '').replace(/'/g, "\\'"))}')" title="Sync / Add event to Google Calendar">
-            📅 Google Calendar
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:4px;"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            Google Calendar
           </button>
           <button class="activity-pill-btn" onclick="openReminderModal(${id}, '${escapedTitle}', '${mediaType}', '${posterPath}', ${existingReminder.id}, '${existingReminder.remind_at}', '${escapeHtml((existingReminder.note || '').replace(/'/g, "\\'"))}')" title="Edit reminder time">
-            ✏️ Edit
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:4px;"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+            Edit
           </button>
           <button class="activity-icon-btn" onclick="deleteUserReminder(${existingReminder.id}, ${id}, '${mediaType}')" title="Delete Reminder">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
@@ -2050,7 +2263,7 @@ async function loadCommentsAndRatings(tmdbId) {
             </div>
           </div>
           <button class="g-btn g-btn-secondary" style="font-size:0.8rem; padding:0.35rem 0.85rem;" onclick="openRatingModal(${tmdbId}, currentMediaTitle || 'Media')">
-            ★ Rate / Edit Your Review
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" style="margin-right:4px;"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>Rate / Edit Your Review
           </button>
         </div>
       `;
