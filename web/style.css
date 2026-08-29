@@ -2137,6 +2137,17 @@ input:focus {
   }
 }
 
+#ntfyModalFooter {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+#onboardingFooterNav,
+#settingsFooterNav {
+  width: 100%;
+  box-sizing: border-box;
+}
+
 /* About VESPER Modal Styles */
 .about-modal-card {
   max-width: 580px;
@@ -3668,13 +3679,22 @@ input:focus {
    ========================================================================== */
 @media (max-width: 900px) {
   .modal-overlay {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    height: 100dvh !important;
     align-items: flex-end !important;
     justify-content: center !important;
-    padding: 0 0 calc(90px + env(safe-area-inset-bottom, 0px)) 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
     background: rgba(0, 0, 0, 0.75) !important;
     backdrop-filter: blur(8px) !important;
     -webkit-backdrop-filter: blur(8px) !important;
-    z-index: 2000 !important;
+    z-index: 3000 !important;
   }
 
   .modal-card,
@@ -3682,13 +3702,16 @@ input:focus {
     width: 100% !important;
     max-width: 100% !important;
     border-radius: 24px 24px 0 0 !important;
+    border-bottom-left-radius: 0 !important;
+    border-bottom-right-radius: 0 !important;
     border-left: 1px solid var(--g-border) !important;
     border-right: 1px solid var(--g-border) !important;
     border-top: 1px solid var(--g-border) !important;
-    border-bottom: 1px solid var(--g-border) !important;
+    border-bottom: none !important;
     margin: 0 !important;
-    max-height: calc(100dvh - 160px) !important;
-    max-height: calc(100vh - 160px) !important;
+    margin-bottom: 0 !important;
+    max-height: 90dvh !important;
+    max-height: 90vh !important;
     display: flex !important;
     flex-direction: column !important;
     overflow: hidden !important;
@@ -3747,7 +3770,7 @@ input:focus {
     justify-content: flex-end !important;
     gap: 0.75rem !important;
     margin-top: auto !important;
-    padding: 0.85rem 1.25rem !important;
+    padding: 1rem 1.25rem calc(80px + env(safe-area-inset-bottom, 16px)) 1.25rem !important;
     border-top: 1px solid var(--g-border) !important;
     background: var(--g-surface) !important;
     flex-shrink: 0 !important;

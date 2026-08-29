@@ -12,7 +12,7 @@
     href="https://fonts.googleapis.com/css2?family=Google+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,700&family=Google+Sans+Text:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&display=swap"
     rel="stylesheet">
 
-  <link rel="stylesheet" href="style.css?v=2.1">
+  <link rel="stylesheet" href="style.css?v=2.5">
 
   <!-- Firebase JS SDK -->
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
@@ -842,9 +842,10 @@
 
       </div>
 
-      <!-- Footer for Onboarding Wizard vs Edit Mode -->
-      <div class="modal-footer" id="onboardingFooter" style="display: none;">
-        <div id="onboardFooterNav" style="display:flex; width:100%; justify-content:space-between; align-items:center;">
+      <!-- Unified Modal Footer -->
+      <div class="modal-footer" id="ntfyModalFooter">
+        <!-- Onboarding Wizard Navigation -->
+        <div id="onboardingFooterNav" style="display:none; width:100%;">
           <!-- Step 1 Nav -->
           <div id="onboardNavStep1" style="display:flex; width:100%; justify-content:space-between; align-items:center;">
             <button type="button" class="g-btn g-btn-subtle" onclick="skipOnboarding()">Skip for Now</button>
@@ -879,13 +880,12 @@
             </button>
           </div>
         </div>
-      </div>
 
-      <!-- Standard Settings Footer -->
-      <div class="modal-footer" id="settingsFooter"
-        style="display: flex; gap: 0.5rem; justify-content: space-between; align-items: center;">
-        <button class="g-btn g-btn-secondary" onclick="closeNtfyModal(); openAboutModal();">About VESPER</button>
-        <button class="g-btn" onclick="saveNtfySettings()">Save Settings</button>
+        <!-- Standard Settings Footer -->
+        <div id="settingsFooterNav" style="display: flex; width: 100%; gap: 0.5rem; justify-content: space-between; align-items: center;">
+          <button class="g-btn g-btn-secondary" onclick="closeNtfyModal(); openAboutModal();">About VESPER</button>
+          <button class="g-btn" onclick="saveNtfySettings()">Save Settings</button>
+        </div>
       </div>
 
     </div>
@@ -1044,7 +1044,7 @@
     </div>
   </div>
 
-  <script src="app.js?v=2.1"></script>
+  <script src="app.js?v=2.3"></script>
 </body>
 
 </html>

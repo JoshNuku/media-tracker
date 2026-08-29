@@ -232,8 +232,8 @@ function openNtfyModal(isEdit = false) {
   const stepIndicator = document.getElementById('onboardingStepIndicator');
   const wizardView = document.getElementById('onboardingWizardView');
   const settingsView = document.getElementById('accountSettingsView');
-  const onboardingFooter = document.getElementById('onboardingFooter');
-  const settingsFooter = document.getElementById('settingsFooter');
+  const onboardingFooterNav = document.getElementById('onboardingFooterNav');
+  const settingsFooterNav = document.getElementById('settingsFooterNav');
   const modalTitle = document.getElementById('ntfyModalTitle');
 
   // Common user defaults
@@ -253,8 +253,8 @@ function openNtfyModal(isEdit = false) {
     if (stepIndicator) stepIndicator.style.display = 'flex';
     if (wizardView) wizardView.style.display = 'block';
     if (settingsView) settingsView.style.display = 'none';
-    if (onboardingFooter) onboardingFooter.style.display = 'flex';
-    if (settingsFooter) settingsFooter.style.display = 'none';
+    if (onboardingFooterNav) onboardingFooterNav.style.display = 'block';
+    if (settingsFooterNav) settingsFooterNav.style.display = 'none';
 
     // Step 1 Profile info
     const onboardAvatar = document.getElementById('onboardUserAvatar');
@@ -283,8 +283,8 @@ function openNtfyModal(isEdit = false) {
     if (stepIndicator) stepIndicator.style.display = 'none';
     if (wizardView) wizardView.style.display = 'none';
     if (settingsView) settingsView.style.display = 'block';
-    if (onboardingFooter) onboardingFooter.style.display = 'none';
-    if (settingsFooter) settingsFooter.style.display = 'flex';
+    if (onboardingFooterNav) onboardingFooterNav.style.display = 'none';
+    if (settingsFooterNav) settingsFooterNav.style.display = 'flex';
 
     // Update profile card elements
     const modalAvatar = document.getElementById('modalProfileAvatar');
